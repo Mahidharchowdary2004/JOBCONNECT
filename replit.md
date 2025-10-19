@@ -70,6 +70,17 @@ A full-stack job portal web application built with Django that connects job seek
 ## Running the Application
 The Django development server runs automatically on port 5000. Access the application at the Replit webview.
 
+### Default Login Credentials
+For quick testing, use these pre-created accounts:
+
+**Job Seeker Account:**
+- Username: `jobseeker`
+- Password: `password123`
+
+**Employer Account:**
+- Username: `employer`
+- Password: `password123`
+
 ### Admin Panel
 Access at `/admin/` - create a superuser first:
 ```bash
