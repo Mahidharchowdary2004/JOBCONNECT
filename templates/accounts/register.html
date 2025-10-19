@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Register - Job Portal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><h3>Create Account</h3></div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label>First Name</label>
+                            <input type="text" name="first_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Last Name</label>
+                            <input type="text" name="last_name" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label>Username</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Phone</label>
+                        <input type="text" name="phone" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label>I am a:</label>
+                        <select name="role" class="form-control" required id="roleSelect">
+                            <option value="">Select Role</option>
+                            <option value="seeker">Job Seeker</option>
+                            <option value="employer">Employer</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="companyField" style="display:none;">
+                        <label>Company Name</label>
+                        <input type="text" name="company_name" class="form-control">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label>Password</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Confirm Password</label>
+                            <input type="password" name="password2" class="form-control" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-link">Already have an account? Login</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('roleSelect').addEventListener('change', function() {
+        const companyField = document.getElementById('companyField');
+        if (this.value === 'employer') {
+            companyField.style.display = 'block';
+        } else {
+            companyField.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

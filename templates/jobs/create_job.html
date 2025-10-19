@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Post Job - Job Portal{% endblock %}
+{% block content %}
+<h2>Post a New Job</h2>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3"><label>Job Title</label><input type="text" name="title" class="form-control" required></div>
+            <div class="mb-3"><label>Description</label><textarea name="description" class="form-control" rows="4" required></textarea></div>
+            <div class="mb-3"><label>Requirements</label><textarea name="requirements" class="form-control" rows="3" required></textarea></div>
+            <div class="mb-3"><label>Responsibilities</label><textarea name="responsibilities" class="form-control" rows="3"></textarea></div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label>Job Type</label><select name="job_type" class="form-control" required><option value="">Select Type</option><option value="full-time">Full Time</option><option value="part-time">Part Time</option><option value="contract">Contract</option><option value="internship">Internship</option><option value="remote">Remote</option></select></div>
+                <div class="col-md-6 mb-3"><label>Experience Level</label><select name="experience_level" class="form-control" required><option value="">Select Level</option><option value="entry">Entry Level</option><option value="mid">Mid Level</option><option value="senior">Senior Level</option><option value="executive">Executive</option></select></div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label>Category</label><input type="text" name="category" class="form-control" required></div>
+                <div class="col-md-6 mb-3"><label>Location</label><input type="text" name="location" class="form-control" required></div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label>Min Salary</label><input type="number" name="salary_min" class="form-control"></div>
+                <div class="col-md-6 mb-3"><label>Max Salary</label><input type="number" name="salary_max" class="form-control"></div>
+            </div>
+            <div class="mb-3"><label>Application Deadline</label><input type="date" name="deadline" class="form-control"></div>
+            <button type="submit" class="btn btn-primary">Post Job</button>
+            <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

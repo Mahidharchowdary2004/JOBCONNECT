@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Employer Dashboard - Job Portal{% endblock %}
+{% block content %}
+<h2>Employer Dashboard</h2>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h5>Company Profile</h5>
+                <p><strong>Company:</strong> {{ employer_profile.company_name }}</p>
+                <p><strong>Industry:</strong> {{ employer_profile.industry|default:"Not specified" }}</p>
+                <p><strong>Location:</strong> {{ employer_profile.location|default:"Not specified" }}</p>
+                <a href="{% url 'accounts:edit_employer_profile' %}" class="btn btn-primary">Edit Profile</a>
+                <a href="{% url 'jobs:create_job' %}" class="btn btn-success">Post New Job</a>
+            </div>
+        </div>
+    </div>
+</div>
+<h3>My Job Postings</h3>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr><th>Title</th><th>Location</th><th>Posted</th><th>Applications</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+            <tr>
+                <td><a href="{% url 'jobs:job_detail' job.id %}">{{ job.title }}</a></td>
+                <td>{{ job.location }}</td>
+                <td>{{ job.posted_date|date:"M d, Y" }}</td>
+                <td><a href="{% url 'jobs:view_applicants' job.id %}">{{ job.applications_count }}</a></td>
+                <td>{% if job.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+                <td>
+                    <a href="{% url 'jobs:edit_job' job.id %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'jobs:view_applicants' job.id %}" class="btn btn-sm btn-info">Applicants</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center">No jobs posted yet</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

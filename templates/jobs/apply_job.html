@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Apply for {{ job.title }} - Job Portal{% endblock %}
+{% block content %}
+<h2>Apply for {{ job.title }}</h2>
+<div class="card">
+    <div class="card-body">
+        <h5>{{ job.employer.employer_profile.company_name|default:"Company" }}</h5>
+        <p>{{ job.location }} | {{ job.get_job_type_display }}</p>
+        <hr>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3"><label>Cover Letter</label><textarea name="cover_letter" class="form-control" rows="6" placeholder="Explain why you're a good fit for this position..."></textarea></div>
+            <button type="submit" class="btn btn-success">Submit Application</button>
+            <a href="{% url 'jobs:job_detail' job.id %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

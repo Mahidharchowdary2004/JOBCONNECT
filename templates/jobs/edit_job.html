@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Edit Job - Job Portal{% endblock %}
+{% block content %}
+<h2>Edit Job</h2>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3"><label>Job Title</label><input type="text" name="title" class="form-control" value="{{ job.title }}" required></div>
+            <div class="mb-3"><label>Description</label><textarea name="description" class="form-control" rows="4" required>{{ job.description }}</textarea></div>
+            <div class="mb-3"><label>Requirements</label><textarea name="requirements" class="form-control" rows="3" required>{{ job.requirements }}</textarea></div>
+            <div class="mb-3"><label>Responsibilities</label><textarea name="responsibilities" class="form-control" rows="3">{{ job.responsibilities }}</textarea></div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label>Job Type</label><select name="job_type" class="form-control" required><option value="full-time" {% if job.job_type == 'full-time' %}selected{% endif %}>Full Time</option><option value="part-time" {% if job.job_type == 'part-time' %}selected{% endif %}>Part Time</option><option value="contract" {% if job.job_type == 'contract' %}selected{% endif %}>Contract</option><option value="internship" {% if job.job_type == 'internship' %}selected{% endif %}>Internship</option><option value="remote" {% if job.job_type == 'remote' %}selected{% endif %}>Remote</option></select></div>
+                <div class="col-md-6 mb-3"><label>Experience Level</label><select name="experience_level" class="form-control" required><option value="entry" {% if job.experience_level == 'entry' %}selected{% endif %}>Entry Level</option><option value="mid" {% if job.experience_level == 'mid' %}selected{% endif %}>Mid Level</option><option value="senior" {% if job.experience_level == 'senior' %}selected{% endif %}>Senior Level</option><option value="executive" {% if job.experience_level == 'executive' %}selected{% endif %}>Executive</option></select></div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label>Category</label><input type="text" name="category" class="form-control" value="{{ job.category }}" required></div>
+                <div class="col-md-6 mb-3"><label>Location</label><input type="text" name="location" class="form-control" value="{{ job.location }}" required></div>
+            </div>
+            <div class="mb-3 form-check"><input type="checkbox" name="is_active" class="form-check-input" id="is_active" {% if job.is_active %}checked{% endif %}><label class="form-check-label" for="is_active">Active</label></div>
+            <button type="submit" class="btn btn-primary">Update Job</button>
+            <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

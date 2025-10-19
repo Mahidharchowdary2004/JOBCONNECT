@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Edit Company Profile - Job Portal{% endblock %}
+{% block content %}
+<h2>Edit Company Profile</h2>
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3"><label>First Name</label><input type="text" name="first_name" class="form-control" value="{{ user.first_name }}"></div>
+                <div class="col-md-6 mb-3"><label>Last Name</label><input type="text" name="last_name" class="form-control" value="{{ user.last_name }}"></div>
+            </div>
+            <div class="mb-3"><label>Email</label><input type="email" name="email" class="form-control" value="{{ user.email }}"></div>
+            <div class="mb-3"><label>Company Name</label><input type="text" name="company_name" class="form-control" value="{{ employer_profile.company_name }}" required></div>
+            <div class="mb-3"><label>Company Description</label><textarea name="company_description" class="form-control" rows="4">{{ employer_profile.company_description }}</textarea></div>
+            <div class="mb-3"><label>Company Website</label><input type="url" name="company_website" class="form-control" value="{{ employer_profile.company_website }}"></div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label>Company Size</label><input type="text" name="company_size" class="form-control" value="{{ employer_profile.company_size }}" placeholder="e.g., 50-100 employees"></div>
+                <div class="col-md-6 mb-3"><label>Industry</label><input type="text" name="industry" class="form-control" value="{{ employer_profile.industry }}"></div>
+            </div>
+            <div class="mb-3"><label>Location</label><input type="text" name="location" class="form-control" value="{{ employer_profile.location }}"></div>
+            <div class="mb-3"><label>Company Logo</label><input type="file" name="company_logo" class="form-control" accept="image/*"></div>
+            <button type="submit" class="btn btn-primary">Update Profile</button>
+            <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

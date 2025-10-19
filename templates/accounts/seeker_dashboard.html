@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Job Seeker Dashboard - Job Portal{% endblock %}
+{% block content %}
+<h2>Job Seeker Dashboard</h2>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h5>Profile</h5>
+                <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                <p><strong>Skills:</strong> {{ seeker_profile.skills|default:"Not specified" }}</p>
+                <p><strong>Experience:</strong> {{ seeker_profile.experience_years }} years</p>
+                <a href="{% url 'accounts:edit_seeker_profile' %}" class="btn btn-primary">Edit Profile</a>
+            </div>
+        </div>
+    </div>
+</div>
+<h3>My Applications</h3>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr><th>Job Title</th><th>Company</th><th>Applied Date</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td><a href="{% url 'jobs:job_detail' app.job.id %}">{{ app.job.title }}</a></td>
+                <td>{{ app.job.employer.employer_profile.company_name|default:"Company" }}</td>
+                <td>{{ app.applied_date|date:"M d, Y" }}</td>
+                <td><span class="badge bg-info">{{ app.get_status_display }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center">No applications yet</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

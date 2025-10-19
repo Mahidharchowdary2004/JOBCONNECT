@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Applicants for {{ job.title }} - Job Portal{% endblock %}
+{% block content %}
+<h2>Applicants for {{ job.title }}</h2>
+<p>Total Applications: {{ applications.count }}</p>
+<div class="table-responsive">
+    <table class="table">
+        <thead><tr><th>Applicant</th><th>Email</th><th>Applied Date</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>{{ app.applicant.first_name }} {{ app.applicant.last_name }}</td>
+                <td>{{ app.applicant.email }}</td>
+                <td>{{ app.applied_date|date:"M d, Y" }}</td>
+                <td><span class="badge bg-info">{{ app.get_status_display }}</span></td>
+                <td>
+                    <form method="post" action="{% url 'jobs:update_application_status' app.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <select name="status" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
+                            <option value="pending" {% if app.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="reviewing" {% if app.status == 'reviewing' %}selected{% endif %}>Reviewing</option>
+                            <option value="shortlisted" {% if app.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                            <option value="accepted" {% if app.status == 'accepted' %}selected{% endif %}>Accepted</option>
+                            <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center">No applications yet</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+{% endblock %}
