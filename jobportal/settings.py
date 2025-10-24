@@ -32,6 +32,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# Session timeout settings for both job seekers and employers
+# Sessions will expire after 30 minutes of inactivity
+SESSION_COOKIE_AGE = 180  # 30 minutes in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_SAVE_EVERY_REQUEST = True
+
 # CSRF trusted origins for Replit
 CSRF_TRUSTED_ORIGINS = [
     'https://*.replit.dev',
@@ -69,6 +75,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'accounts.middleware.SessionTimeoutMiddleware',  # Custom session timeout middleware
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -99,14 +106,13 @@ WSGI_APPLICATION = 'jobportal.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('PGDATABASE'),
-        'USER': os.getenv('PGUSER'),
-        'PASSWORD': os.getenv('PGPASSWORD'),
-        'HOST': os.getenv('PGHOST'),
-        'PORT': os.getenv('PGPORT'),
+        'NAME': 'Mahi',
+        'USER': 'postgres',
+        'PASSWORD': 'Mahi@123',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -157,6 +163,20 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'accounts:dashboard'
 LOGOUT_REDIRECT_URL = 'jobs:home'
+
+# Email Configuration
+# For development, using console backend to print emails to console
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# In production, you would use:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.your-email-provider.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@domain.com'
+# EMAIL_HOST_PASSWORD = 'nallapanenimahidhar2004@gmail.com'
+
+# Default email address for sending emails
+DEFAULT_FROM_EMAIL = 'nallapanenimahidhar2004@gmail.com'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

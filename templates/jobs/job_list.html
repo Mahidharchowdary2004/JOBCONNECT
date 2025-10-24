@@ -1,40 +1,1015 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load query_extras %}
 {% block title %}Browse Jobs - Job Portal{% endblock %}
 {% block content %}
-<h2>Browse Jobs</h2>
-<form method="get" class="card p-3 mb-4">
-    <div class="row">
-        <div class="col-md-3 mb-2"><input type="text" name="search" class="form-control" placeholder="Job title or keyword" value="{{ search_query }}"></div>
-        <div class="col-md-3 mb-2"><input type="text" name="location" class="form-control" placeholder="Location" value="{{ location }}"></div>
-        <div class="col-md-2 mb-2">
-            <select name="job_type" class="form-control">
-                <option value="">Job Type</option>
-                <option value="full-time">Full Time</option>
-                <option value="part-time">Part Time</option>
-                <option value="contract">Contract</option>
-                <option value="internship">Internship</option>
-                <option value="remote">Remote</option>
-            </select>
+
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #4895ef;
+        --primary-dark: #3a0ca3;
+        --secondary: #7209b7;
+        --accent: #f72585;
+        --success: #4cc9f0;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        --gradient-secondary: linear-gradient(135deg, #7209b7 0%, #b5179e 100%);
+        --gradient-accent: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+        --gradient-success: linear-gradient(135deg, #4cc9f0 0%, #3a86ff 100%);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        --border-radius: 20px;
+    }
+    
+    .jobs-container {
+        background: linear-gradient(135deg, #f5f7ff 0%, #f0f4ff 50%, #e6f0ff 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .page-header {
+        margin-bottom: 2rem;
+        position: relative;
+        padding-bottom: 15px;
+        background: white;
+        padding: 2.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        margin-top: 1rem;
+        text-align: center;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--gradient);
+    }
+    
+    .page-header::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200px;
+        height: 200px;
+        background: var(--gradient);
+        opacity: 0.03;
+        border-radius: 50%;
+        animation: float 8s ease-in-out infinite;
+    }
+    
+    .page-header h2 {
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin-bottom: 0.5rem;
+        font-size: 2.8rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .page-header .subtitle {
+        font-size: 1.2rem;
+        color: #64748b;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 2;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+    }
+    
+    /* Search Form Styles */
+    .search-form {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        border: none;
+        padding: 2.5rem !important;
+        margin-bottom: 2.5rem;
+        transition: var(--transition);
+        animation: slideInDown 0.6s ease-out;
+        background: linear-gradient(to bottom, #ffffff, #f8faff);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+    }
+    
+    .search-form::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--gradient);
+    }
+    
+    .search-form::after {
+        content: '';
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 200px;
+        height: 200px;
+        background: var(--gradient-secondary);
+        opacity: 0.03;
+        border-radius: 50%;
+        animation: pulse 6s ease-in-out infinite;
+    }
+    
+    @keyframes slideInDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.03; }
+        50% { transform: scale(1.1); opacity: 0.05; }
+    }
+    
+    .search-form:hover {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        transform: translateY(-5px);
+    }
+    
+    .form-control {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.85rem 1.2rem;
+        font-size: 1rem;
+        transition: var(--transition);
+        height: auto;
+        background: #f8fafc;
+        font-weight: 500;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
+        background: white;
+        transform: translateY(-2px);
+    }
+    
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 16px;
+        padding-right: 2.5rem;
+    }
+    
+    .btn-primary {
+        background: var(--gradient);
+        border: none;
+        color: white;
+        box-shadow: 0 6px 20px rgba(67, 97, 238, 0.3);
+        padding: 0.85rem 1.5rem;
+        font-weight: 600;
+        border-radius: 14px;
+        transition: var(--transition);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        font-size: 1rem;
+    }
+    
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: 0.5s;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(67, 97, 238, 0.4);
+        background-size: 150% 150%;
+    }
+    
+    .btn-primary:hover::before {
+        left: 100%;
+    }
+    
+    /* Enhanced Job Cards Grid */
+    .jobs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .job-card {
+        background: white;
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        transition: var(--transition);
+        overflow: hidden;
+        height: 100%;
+        position: relative;
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    .job-card:nth-child(1) { animation-delay: 0.1s; }
+    .job-card:nth-child(2) { animation-delay: 0.2s; }
+    .job-card:nth-child(3) { animation-delay: 0.3s; }
+    .job-card:nth-child(4) { animation-delay: 0.4s; }
+    .job-card:nth-child(5) { animation-delay: 0.5s; }
+    .job-card:nth-child(6) { animation-delay: 0.6s; }
+    
+    .job-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .job-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--gradient);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: var(--transition);
+    }
+    
+    .job-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .card-header {
+        padding: 1.75rem 1.75rem 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+        position: relative;
+    }
+    
+    .card-body {
+        padding: 1.5rem 1.75rem 1.75rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+    
+    .company-logo {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background: var(--gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+        transition: var(--transition);
+    }
+    
+    .job-card:hover .company-logo {
+        transform: scale(1.1) rotate(5deg);
+    }
+    
+    .card-title {
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+        font-size: 1.4rem;
+        transition: var(--transition);
+        line-height: 1.3;
+    }
+    
+    .job-card:hover .card-title {
+        color: var(--primary);
+    }
+    
+    .company-name {
+        color: #64748b;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .company-name i {
+        margin-right: 8px;
+        color: var(--primary);
+        font-size: 0.9rem;
+    }
+    
+    .job-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+    
+    .meta-item i {
+        width: 20px;
+        margin-right: 10px;
+        color: var(--primary);
+        font-size: 0.9rem;
+    }
+    
+    .card-text {
+        color: #64748b;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        flex-grow: 1;
+        border-left: 3px solid var(--primary-light);
+        padding-left: 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .job-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-top: auto;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        gap: 1rem;
+    }
+    
+    .job-type-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(67, 97, 238, 0.1);
+        color: var(--primary);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: var(--transition);
+        border: 1px solid rgba(67, 97, 238, 0.2);
+    }
+    
+    .job-card:hover .job-type-badge {
+        background: rgba(67, 97, 238, 0.2);
+        transform: scale(1.05);
+    }
+    
+    .salary-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(76, 201, 240, 0.1);
+        color: #0ea5e9;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid rgba(76, 201, 240, 0.2);
+    }
+    
+    /* Fixed Button Styles - Ensuring they are visible */
+    .btn-view-details {
+        background: transparent;
+        border: 2px solid var(--primary);
+        color: var(--primary);
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+        white-space: nowrap;
+        min-width: max-content;
+    }
+    
+    .btn-view-details:hover {
+        background: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        text-decoration: none;
+    }
+    
+    .btn-apply {
+        background: var(--gradient);
+        border: none;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: var(--transition);
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+        white-space: nowrap;
+        min-width: max-content;
+    }
+    
+    .btn-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(67, 97, 238, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .job-actions {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+    
+    .job-featured {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: var(--gradient-accent);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        z-index: 2;
+        box-shadow: 0 4px 12px rgba(247, 37, 133, 0.3);
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+        grid-column: 1 / -1;
+        animation: fadeIn 0.8s ease-out;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        margin: 2rem 0;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        color: #cbd5e1;
+        opacity: 0.7;
+    }
+    
+    .empty-state h4 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #475569;
+        font-weight: 600;
+    }
+    
+    .empty-state p {
+        font-size: 1.1rem;
+        max-width: 500px;
+        margin: 0 auto 2rem;
+    }
+    
+    /* Filter Tags */
+    .filter-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        animation: slideInDown 0.5s ease-out;
+    }
+    
+    .filter-tag {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(67, 97, 238, 0.1);
+        color: var(--primary);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: var(--transition);
+        border: 1px solid rgba(67, 97, 238, 0.2);
+    }
+    
+    .filter-tag:hover {
+        background: rgba(67, 97, 238, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .filter-tag .remove {
+        margin-left: 0.5rem;
+        cursor: pointer;
+        font-weight: bold;
+        opacity: 0.7;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.05);
+    }
+    
+    .filter-tag .remove:hover {
+        opacity: 1;
+        transform: scale(1.2);
+        background: rgba(0,0,0,0.1);
+    }
+    
+    .clear-all-tag {
+        background: rgba(247, 37, 133, 0.1) !important;
+        color: var(--accent) !important;
+        border: 1px solid rgba(247, 37, 133, 0.2) !important;
+    }
+    
+    .clear-all-tag:hover {
+        background: rgba(247, 37, 133, 0.2) !important;
+    }
+    
+    /* Results Count */
+    .results-count {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
+        animation: fadeIn 0.6s ease-out;
+        background: rgba(67, 97, 238, 0.05);
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        display: inline-block;
+        border-left: 4px solid var(--primary);
+        font-weight: 500;
+    }
+    
+    .results-count strong {
+        color: var(--primary);
+        font-weight: 700;
+    }
+    
+    /* Loading animation */
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    
+    .loading {
+        animation: pulse 1.5s infinite;
+    }
+    
+    /* Quick Stats */
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        text-align: center;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        transition: var(--transition);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    /* Featured job animation */
+    .featured-pulse {
+        animation: featuredPulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes featuredPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(247, 37, 133, 0.4); }
+        50% { box-shadow: 0 0 0 10px rgba(247, 37, 133, 0); }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .jobs-grid {
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .jobs-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .search-form {
+            padding: 1.5rem !important;
+        }
+        
+        .page-header {
+            padding: 2rem 1.5rem;
+        }
+        
+        .page-header h2 {
+            font-size: 2rem;
+        }
+        
+        .job-footer {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+        }
+        
+        .job-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+        
+        .btn-view-details,
+        .btn-apply {
+            flex: 1;
+            text-align: center;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+        }
+
+        .quick-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .quick-stats {
+            grid-template-columns: 1fr;
+        }
+        
+        .job-actions {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .btn-view-details,
+        .btn-apply {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="jobs-container">
+    <div class="container">
+        <div class="page-header">
+            <h2>Discover Your Dream Career</h2>
+            <p class="subtitle">Find the perfect job that matches your skills and aspirations</p>
+            {% if search_query or location or job_type or category %}
+            <div class="results-count mt-3">
+                <i class="fas fa-search me-2"></i>Found <strong>{{ jobs|length }}</strong> job{{ jobs|length|pluralize }} matching your criteria
+            </div>
+            {% endif %}
         </div>
-        <div class="col-md-2 mb-2"><input type="text" name="category" class="form-control" placeholder="Category" value="{{ category }}"></div>
-        <div class="col-md-2 mb-2"><button type="submit" class="btn btn-primary w-100">Search</button></div>
-    </div>
-</form>
-<div class="row">
-    {% for job in jobs %}
-    <div class="col-md-6 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">{{ job.title }}</h5>
-                <p class="text-muted"><i class="fas fa-building"></i> {{ job.employer.employer_profile.company_name|default:"Company" }}</p>
-                <p><i class="fas fa-map-marker-alt"></i> {{ job.location }} | <i class="fas fa-briefcase"></i> {{ job.get_job_type_display }}</p>
-                <p>{{ job.description|truncatewords:15 }}</p>
-                <a href="{% url 'jobs:job_detail' job.id %}" class="btn btn-primary btn-sm">View Details</a>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_jobs }}</div>
+                <div class="stat-label">Total Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ featured_jobs }}</div>
+                <div class="stat-label">Featured Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ remote_jobs }}</div>
+                <div class="stat-label">Remote Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ new_today }}</div>
+                <div class="stat-label">New Today</div>
             </div>
         </div>
+
+        <form method="get" class="search-form">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="form-group">
+                        <label for="search" class="form-label small text-muted mb-1">Job Title or Keyword</label>
+                        <input type="text" name="search" id="search" class="form-control" placeholder="e.g. Software Engineer" value="{{ search_query }}">
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="form-group">
+                        <label for="location" class="form-label small text-muted mb-1">Location</label>
+                        <input type="text" name="location" id="location" class="form-control" placeholder="e.g. New York" value="{{ location }}">
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="form-group">
+                        <label for="job_type" class="form-label small text-muted mb-1">Job Type</label>
+                        <select name="job_type" id="job_type" class="form-control">
+                            <option value="">All Types</option>
+                            <option value="full-time" {% if request.GET.job_type == 'full-time' %}selected{% endif %}>Full Time</option>
+                            <option value="part-time" {% if request.GET.job_type == 'part-time' %}selected{% endif %}>Part Time</option>
+                            <option value="contract" {% if request.GET.job_type == 'contract' %}selected{% endif %}>Contract</option>
+                            <option value="internship" {% if request.GET.job_type == 'internship' %}selected{% endif %}>Internship</option>
+                            <option value="remote" {% if request.GET.job_type == 'remote' %}selected{% endif %}>Remote</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <div class="form-group">
+                        <label for="category" class="form-label small text-muted mb-1">Category</label>
+                        <input type="text" name="category" id="category" class="form-control" placeholder="e.g. Technology" value="{{ category }}">
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>Search Jobs
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Active Filters -->
+            {% if search_query or location or job_type or category %}
+            <div class="filter-tags mt-3">
+                {% if search_query %}
+                <div class="filter-tag">
+                    <i class="fas fa-keyword me-1"></i> Keyword: {{ search_query }}
+                    <a href="?{% query_string without='search' %}" class="remove ms-2">×</a>
+                </div>
+                {% endif %}
+                {% if location %}
+                <div class="filter-tag">
+                    <i class="fas fa-map-marker-alt me-1"></i> Location: {{ location }}
+                    <a href="?{% query_string without='location' %}" class="remove ms-2">×</a>
+                </div>
+                {% endif %}
+                {% if job_type %}
+                <div class="filter-tag">
+                    <i class="fas fa-briefcase me-1"></i> Type: {{ job_type|title }}
+                    <a href="?{% query_string without='job_type' %}" class="remove ms-2">×</a>
+                </div>
+                {% endif %}
+                {% if category %}
+                <div class="filter-tag">
+                    <i class="fas fa-tag me-1"></i> Category: {{ category }}
+                    <a href="?{% query_string without='category' %}" class="remove ms-2">×</a>
+                </div>
+                {% endif %}
+                <a href="?" class="filter-tag clear-all-tag">
+                    <i class="fas fa-times me-1"></i> Clear All
+                </a>
+            </div>
+            {% endif %}
+        </form>
+
+        <div class="jobs-grid">
+            {% for job in jobs %}
+            <div class="job-card {% if forloop.counter <= 2 %}featured-pulse{% endif %}">
+                {% if forloop.counter <= 2 %}
+                <div class="job-featured">
+                    <i class="fas fa-star me-1"></i>Featured
+                </div>
+                {% endif %}
+                
+                <div class="card-header">
+                    <div class="company-logo">
+                        {% if job.employer.employer_profile.company_name %}
+                            {{ job.employer.employer_profile.company_name|slice:":1"|upper }}
+                        {% else %}
+                            {{ job.employer.username|slice:":1"|upper }}
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title">{{ job.title }}</h5>
+                    <div class="company-name">
+                        <i class="fas fa-building"></i> 
+                        {% if job.employer.employer_profile.company_name %}
+                            {{ job.employer.employer_profile.company_name }}
+                        {% else %}
+                            {{ job.employer.get_full_name|default:job.employer.username }}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="job-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ job.location }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-briefcase"></i>
+                            <span>{{ job.get_job_type_display }}</span>
+                        </div>
+                        {% if job.salary_min or job.salary_max %}
+                        <div class="meta-item">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>
+                                {% if job.salary_min and job.salary_max %}
+                                    ${{ job.salary_min|floatformat:0 }} - ${{ job.salary_max|floatformat:0 }}
+                                {% elif job.salary_min %}
+                                    From ${{ job.salary_min|floatformat:0 }}
+                                {% elif job.salary_max %}
+                                    Up to ${{ job.salary_max|floatformat:0 }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Posted {{ job.posted_date|timesince }} ago</span>
+                        </div>
+                    </div>
+                    
+                    <p class="card-text">{{ job.description|truncatewords:25 }}</p>
+                    
+                    <div class="job-footer">
+                        <div class="d-flex flex-column gap-2">
+                            <span class="job-type-badge">
+                                <i class="fas fa-tag me-1"></i>{{ job.get_job_type_display }}
+                            </span>
+                            {% if job.salary_min or job.salary_max %}
+                            <span class="salary-badge">
+                                <i class="fas fa-dollar-sign me-1"></i>
+                                {% if job.salary_min and job.salary_max %}
+                                    ${{ job.salary_min|floatformat:0 }} - ${{ job.salary_max|floatformat:0 }}
+                                {% elif job.salary_min %}
+                                    From ${{ job.salary_min|floatformat:0 }}
+                                {% elif job.salary_max %}
+                                    Up to ${{ job.salary_max|floatformat:0 }}
+                                {% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="job-actions">
+                            <a href="{% url 'jobs:job_detail' job.id %}" class="btn-view-details">
+                                <i class="fas fa-eye"></i>View Details
+                            </a>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <h4>No jobs found matching your criteria</h4>
+                <p>Try adjusting your search filters or browse all available positions</p>
+                <a href="?" class="btn btn-primary mt-3 px-4 py-2">
+                    <i class="fas fa-refresh me-2"></i>Clear Filters
+                </a>
+            </div>
+            {% endfor %}
+        </div>
     </div>
-    {% empty %}
-    <div class="col-12"><p class="text-center">No jobs found matching your criteria.</p></div>
-    {% endfor %}
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add animation to form elements on focus
+        const formInputs = document.querySelectorAll('.form-control');
+        formInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Add loading animation to search button
+        const searchButton = document.querySelector('button[type="submit"]');
+        if (searchButton) {
+            searchButton.addEventListener('click', function() {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Searching...';
+                this.classList.add('loading');
+                
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.classList.remove('loading');
+                }, 2000);
+            });
+        }
+        
+        // Enhanced hover effects for job cards
+        const jobCards = document.querySelectorAll('.job-card');
+        jobCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+        
+        // Add subtle animation to filter tags
+        const filterTags = document.querySelectorAll('.filter-tag');
+        filterTags.forEach(tag => {
+            tag.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            
+            tag.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Add click animation to buttons
+        const actionButtons = document.querySelectorAll('.btn-view-details, .btn-apply');
+        actionButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        });
+        
+        // Add parallax effect to page header
+        window.addEventListener('scroll', function() {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('.page-header');
+            if (parallax) {
+                parallax.style.transform = `translateY(${scrolled * 0.1}px)`;
+            }
+        });
+        
+        // Quick stats animation
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+        });
+
+        // Ensure buttons are always visible
+        const jobActions = document.querySelectorAll('.job-actions');
+        jobActions.forEach(action => {
+            action.style.opacity = '1';
+            action.style.visibility = 'visible';
+        });
+    });
+</script>
+
 {% endblock %}

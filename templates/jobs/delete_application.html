@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Application - Job Portal{% endblock %}
+
+{% block content %}
+
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #4895ef;
+        --primary-dark: #3a0ca3;
+        --secondary: #7209b7;
+        --accent: #f72585;
+        --success: #4cc9f0;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        --gradient-secondary: linear-gradient(135deg, #7209b7 0%, #b5179e 100%);
+        --gradient-accent: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+        --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        --border-radius: 20px;
+    }
+    
+    .delete-container {
+        background: linear-gradient(135deg, #fef2f2 0%, #fecaca 50%, #fca5a5 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .delete-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        border: none;
+        overflow: hidden;
+        transition: var(--transition);
+        animation: slideInUp 0.6s ease-out;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        position: relative;
+        max-width: 600px;
+        width: 100%;
+    }
+    
+    .delete-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--gradient-danger);
+    }
+    
+    .delete-card::after {
+        content: '';
+        position: absolute;
+        top: -100px;
+        right: -100px;
+        width: 200px;
+        height: 200px;
+        background: var(--gradient-danger);
+        opacity: 0.03;
+        border-radius: 50%;
+        animation: pulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes slideInUp {
+        from { opacity: 0; transform: translateY(30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.03; }
+        50% { transform: scale(1.1); opacity: 0.05; }
+    }
+    
+    .delete-card:hover {
+        box-shadow: 0 20px 40px rgba(239, 68, 68, 0.15);
+        transform: translateY(-5px);
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border-bottom: 1px solid rgba(239, 68, 68, 0.1);
+        padding: 2rem 2.5rem 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .warning-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--gradient-danger);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        animation: pulseIcon 2s ease-in-out infinite;
+        position: relative;
+        z-index: 2;
+    }
+    
+    @keyframes pulseIcon {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    .card-header h3 {
+        font-weight: 800;
+        color: #dc2626;
+        margin-bottom: 0.5rem;
+        font-size: 1.8rem;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .card-header p {
+        color: #ef4444;
+        margin-bottom: 0;
+        font-weight: 500;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .card-body {
+        padding: 2.5rem;
+    }
+    
+    /* Warning Alert */
+    .warning-alert {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        animation: shake 0.8s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .warning-alert::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: #f59e0b;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    .warning-alert i {
+        color: #d97706;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        float: left;
+    }
+    
+    .warning-alert strong {
+        color: #92400e;
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .warning-alert p {
+        color: #92400e;
+        margin-bottom: 0;
+        font-weight: 500;
+    }
+    
+    /* Application Details */
+    .application-details {
+        background: rgba(67, 97, 238, 0.03);
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        animation: fadeInUp 0.6s ease-out 0.3s both;
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .application-details h5 {
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .application-details h5 i {
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .detail-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .detail-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .detail-value i {
+        color: var(--primary);
+        font-size: 0.9rem;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        animation: fadeInUp 0.6s ease-out 0.7s both;
+    }
+    
+    .btn {
+        padding: 0.85rem 2rem;
+        font-weight: 600;
+        border-radius: 14px;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        flex: 1;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-delete {
+        background: var(--gradient-danger);
+        color: white;
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+    }
+    
+    .btn-delete::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: 0.5s;
+    }
+    
+    .btn-delete:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(239, 68, 68, 0.4);
+        background-size: 150% 150%;
+    }
+    
+    .btn-delete:hover::before {
+        left: 100%;
+    }
+    
+    .btn-cancel {
+        background: rgba(100, 116, 139, 0.1);
+        border: 2px solid rgba(100, 116, 139, 0.2);
+        color: #64748b;
+    }
+    
+    .btn-cancel:hover {
+        background: rgba(100, 116, 139, 0.2);
+        color: #475569;
+        transform: translateY(-2px);
+        border-color: rgba(100, 116, 139, 0.3);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .delete-container {
+            padding: 1rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .card-header {
+            padding: 1.5rem 1.5rem 1rem;
+        }
+        
+        .warning-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+        
+        .card-header h3 {
+            font-size: 1.5rem;
+        }
+        
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="delete-container">
+    <div class="delete-card">
+        <div class="card-header">
+            <div class="warning-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3>
+                {% if is_employer %}
+                    Delete Application
+                {% else %}
+                    Withdraw Application
+                {% endif %}
+            </h3>
+            <p>This action requires confirmation</p>
+        </div>
+        
+        <div class="card-body">
+            <!-- Warning Alert -->
+            <div class="warning-alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Irreversible Action</strong>
+                <p>
+                    {% if is_employer %}
+                        This action cannot be undone. All data associated with this application will be permanently deleted.
+                    {% else %}
+                        This action cannot be undone. Your application will be permanently withdrawn from this position.
+                    {% endif %}
+                </p>
+            </div>
+            
+            <!-- Application Details -->
+            <div class="application-details">
+                <h5><i class="fas fa-user"></i>Application Details</h5>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Applicant Name</span>
+                        <span class="detail-value">
+                            <i class="fas fa-user"></i>{{ application.applicant.first_name }} {{ application.applicant.last_name }}
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Job Title</span>
+                        <span class="detail-value">
+                            <i class="fas fa-briefcase"></i>{{ application.job.title }}
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Applied Date</span>
+                        <span class="detail-value">
+                            <i class="fas fa-calendar"></i>{{ application.applied_date|date:"M d, Y" }}
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Current Status</span>
+                        <span class="detail-value">
+                            <i class="fas fa-circle"></i>{{ application.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-delete">
+                        <i class="fas fa-trash"></i>
+                        {% if is_employer %}
+                            Delete This Application
+                        {% else %}
+                            Withdraw My Application
+                        {% endif %}
+                    </button>
+                </form>
+                <a href="{% if is_employer %}{% url 'jobs:view_applicants' application.job.id %}{% else %}{% url 'accounts:dashboard' %}{% endif %}" class="btn btn-cancel">
+                    <i class="fas fa-times"></i>Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

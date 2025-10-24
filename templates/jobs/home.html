@@ -1,38 +1,555 @@
-{% extends 'base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Job Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --primary-dark: #3a0ca3;
+            --secondary: #7209b7;
+            --secondary-light: #b5179e;
+            --accent: #f72585;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            --gradient-secondary: linear-gradient(135deg, #7209b7 0%, #b5179e 100%);
+            --gradient-accent: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --transition-slow: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Hero Section */
+        .jumbotron {
+            background: var(--gradient);
+            color: white;
+            border-radius: 20px;
+            padding: 5rem 3rem;
+            margin: 3rem 0;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 1s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .jumbotron::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .jumbotron-content {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+        }
+        
+        .jumbotron h1 {
+            font-weight: 700;
+            font-size: 3.2rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            animation: slideInLeft 0.8s ease-out;
+        }
+        
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .jumbotron p.lead {
+            font-size: 1.3rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.9;
+            animation: slideInLeft 0.8s ease-out 0.2s both;
+        }
+        
+        .jumbotron-buttons {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            animation: slideInLeft 0.8s ease-out 0.4s both;
+        }
+        
+        .btn {
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .btn-light {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-light:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.4);
+        }
+        
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.4);
+        }
+        
+        .btn-success {
+            background: var(--gradient-accent);
+            color: white;
+            box-shadow: 0 4px 15px rgba(247, 37, 133, 0.3);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(247, 37, 133, 0.4);
+        }
+        
+        /* Section Headings */
+        h2 {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 2.5rem;
+            position: relative;
+            padding-bottom: 15px;
+            font-size: 2.2rem;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 70px;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 2px;
+        }
+        
+        /* Job Cards */
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+        
+        .card {
+            background: white;
+            border: none;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            overflow: hidden;
+            height: 100%;
+            position: relative;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--gradient);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: var(--transition);
+        }
+        
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .card-body {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .card-title {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .text-muted {
+            color: #64748b !important;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+        
+        .text-muted i {
+            width: 20px;
+            margin-right: 8px;
+            color: var(--primary);
+        }
+        
+        .card-text {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+        
+        .job-badge {
+            display: inline-block;
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+            transition: var(--transition);
+        }
+        
+        .card:hover .job-badge {
+            background: rgba(67, 97, 238, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .card-footer {
+            margin-top: auto;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: #64748b;
+            grid-column: 1 / -1;
+        }
+        
+        .empty-state i {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            color: #cbd5e1;
+            opacity: 0.7;
+        }
+        
+        .empty-state h4 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #475569;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 4rem 0 2rem;
+            margin-top: 4rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+        
+        .footer-column h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--gradient);
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+        
+        .footer-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .footer-links a:hover {
+            color: white;
+            padding-left: 5px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: var(--transition);
+        }
+        
+        .social-links a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .jumbotron {
+                padding: 4rem 2rem;
+            }
+            
+            .jumbotron h1 {
+                font-size: 2.5rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .jumbotron {
+                padding: 3rem 1.5rem;
+                text-align: center;
+            }
+            
+            .jumbotron h1 {
+                font-size: 2.2rem;
+            }
+            
+            .jumbotron-buttons {
+                justify-content: center;
+            }
+            
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .jumbotron h1 {
+                font-size: 1.8rem;
+            }
+            
+            .jumbotron p.lead {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'navbar.html' %}
 
-{% block title %}Home - Job Portal{% endblock %}
-
-{% block content %}
-<div class="jumbotron bg-light p-5 rounded">
-    <h1 class="display-4">Find Your Dream Job</h1>
-    <p class="lead">Connect with top employers and discover opportunities that match your skills.</p>
-    <a href="{% url 'jobs:job_list' %}" class="btn btn-primary btn-lg">Browse All Jobs</a>
-    {% if not user.is_authenticated %}
-        <a href="{% url 'accounts:register' %}" class="btn btn-success btn-lg">Get Started</a>
-    {% endif %}
-</div>
-
-<h2 class="mt-5 mb-4">Recent Job Openings</h2>
-<div class="row">
-    {% for job in recent_jobs %}
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">{{ job.title }}</h5>
-                    <p class="text-muted">
-                        <i class="fas fa-building"></i> {{ job.employer.employer_profile.company_name|default:"Company" }}<br>
-                        <i class="fas fa-map-marker-alt"></i> {{ job.location }}<br>
-                        <i class="fas fa-briefcase"></i> {{ job.get_job_type_display }}
-                    </p>
-                    <p class="card-text">{{ job.description|truncatewords:20 }}</p>
-                    <a href="{% url 'jobs:job_detail' job.id %}" class="btn btn-primary">View Details</a>
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Hero Section -->
+        <div class="jumbotron">
+            <div class="jumbotron-content">
+                <h1>Find Your Dream Job</h1>
+                <p class="lead">Connect with top employers and discover opportunities that match your skills.</p>
+                <div class="jumbotron-buttons">
+                    <a href="{% url 'jobs:job_list' %}" class="btn btn-light btn-lg">Browse All Jobs</a>
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'accounts:register' %}" class="btn btn-success btn-lg">Get Started</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
-    {% empty %}
-        <div class="col-12">
-            <p class="text-center">No jobs posted yet.</p>
+
+        <!-- Recent Jobs Section -->
+        <h2>Recent Job Openings</h2>
+        <div class="row">
+            {% for job in recent_jobs %}
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ job.title }}</h5>
+                        <p class="text-muted">
+                            <i class="fas fa-building"></i> 
+                            {% if job.employer.employer_profile.company_name %}
+                                {{ job.employer.employer_profile.company_name }}
+                            {% else %}
+                                {{ job.employer.get_full_name|default:job.employer.username }}
+                            {% endif %}<br>
+                            <i class="fas fa-map-marker-alt"></i> {{ job.location }}<br>
+                            <i class="fas fa-briefcase"></i> {{ job.get_job_type_display }}
+                        </p>
+                        <p class="card-text">{{ job.description|truncatewords:20 }}</p>
+                        <div class="card-footer">
+                            <span class="job-badge">{{ job.category }}</span>
+                            <a href="{% url 'jobs:job_detail' job.id %}" class="btn btn-primary w-100 mt-3">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="fas fa-briefcase"></i>
+                        <h4>No Jobs Available</h4>
+                        <p>There are currently no job openings. Please check back later.</p>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-    {% endfor %}
-</div>
-{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>JobPortal</h3>
+                    <p>Connecting talented professionals with amazing companies worldwide.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>For Job Seekers</h3>
+                    <ul class="footer-links">
+                        <li><a href="{% url 'jobs:job_list' %}">Browse Jobs</a></li>
+                        <li><a href="#">Create Resume</a></li>
+                        <li><a href="#">Job Alerts</a></li>
+                        <li><a href="#">Career Advice</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>For Employers</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Post a Job</a></li>
+                        <li><a href="#">Browse Candidates</a></li>
+                        <li><a href="#">Pricing Plans</a></li>
+                        <li><a href="#">Employer Resources</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Us</h3>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Business Ave, Suite 100</li>
+                        <li><i class="fas fa-phone"></i> +1 (555) 123-4567</li>
+                        <li><i class="fas fa-envelope"></i> info@jobportal.com</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 JobPortal. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Add some interactive animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate cards on scroll
+            const cards = document.querySelectorAll('.card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+            
+            // Add hover effect to buttons
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-3px)';
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

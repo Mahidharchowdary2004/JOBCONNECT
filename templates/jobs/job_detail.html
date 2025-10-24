@@ -1,33 +1,677 @@
 {% extends 'base.html' %}
 {% block title %}{{ job.title }} - Job Portal{% endblock %}
 {% block content %}
-<div class="card">
-    <div class="card-body">
-        <h2>{{ job.title }}</h2>
-        <p class="lead"><i class="fas fa-building"></i> {{ job.employer.employer_profile.company_name|default:"Company" }}</p>
-        <p><i class="fas fa-map-marker-alt"></i> {{ job.location }} | <i class="fas fa-briefcase"></i> {{ job.get_job_type_display }} | <i class="fas fa-graduation-cap"></i> {{ job.get_experience_level_display }}</p>
-        {% if job.salary_min and job.salary_max %}<p><i class="fas fa-money-bill"></i> ${{ job.salary_min }} - ${{ job.salary_max }}</p>{% endif %}
-        <hr>
-        <h4>Description</h4>
-        <p>{{ job.description }}</p>
-        <h4>Requirements</h4>
-        <p>{{ job.requirements }}</p>
-        {% if job.responsibilities %}<h4>Responsibilities</h4><p>{{ job.responsibilities }}</p>{% endif %}
-        <hr>
-        {% if user.is_authenticated %}
-            {% if user.profile.role == 'seeker' %}
-                {% if has_applied %}
-                    <button class="btn btn-secondary" disabled>Already Applied</button>
-                {% else %}
-                    <a href="{% url 'jobs:apply_job' job.id %}" class="btn btn-success">Apply Now</a>
+
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #4895ef;
+        --primary-dark: #3a0ca3;
+        --secondary: #7209b7;
+        --accent: #f72585;
+        --success: #4cc9f0;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        --gradient-secondary: linear-gradient(135deg, #7209b7 0%, #b5179e 100%);
+        --gradient-accent: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+        --gradient-success: linear-gradient(135deg, #4cc9f0 0%, #3a86ff 100%);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        --border-radius: 20px;
+    }
+    
+    .job-detail-container {
+        background: linear-gradient(135deg, #f5f7ff 0%, #f0f4ff 50%, #e6f0ff 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .job-header-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        border: none;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        transition: var(--transition);
+        animation: slideInDown 0.6s ease-out;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        position: relative;
+    }
+    
+    .job-header-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--gradient);
+    }
+    
+    @keyframes slideInDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .job-header-card:hover {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        transform: translateY(-5px);
+    }
+    
+    .card-body {
+        padding: 2.5rem;
+    }
+    
+    /* Job Title Section */
+    .job-title-section {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .job-title {
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin-bottom: 1rem;
+        font-size: 2.5rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.2;
+    }
+    
+    .company-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .company-logo {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
+        background: var(--gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.5rem;
+        box-shadow: 0 6px 20px rgba(67, 97, 238, 0.2);
+        transition: var(--transition);
+    }
+    
+    .company-logo:hover {
+        transform: scale(1.05) rotate(5deg);
+    }
+    
+    .company-details {
+        flex: 1;
+    }
+    
+    .company-name {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .company-name i {
+        color: var(--primary);
+    }
+    
+    .company-tagline {
+        color: #64748b;
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+    
+    /* Job Meta Information */
+    .job-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(67, 97, 238, 0.03);
+        border-radius: 12px;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        transition: var(--transition);
+    }
+    
+    .meta-item:hover {
+        background: rgba(67, 97, 238, 0.08);
+        transform: translateY(-2px);
+    }
+    
+    .meta-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: var(--gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    .meta-content {
+        flex: 1;
+    }
+    
+    .meta-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .meta-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0;
+    }
+    
+    /* Content Sections */
+    .content-section {
+        margin-bottom: 2.5rem;
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+    
+    .content-section:nth-child(1) { animation-delay: 0.2s; }
+    .content-section:nth-child(2) { animation-delay: 0.3s; }
+    .content-section:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .section-title {
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(67, 97, 238, 0.1);
+    }
+    
+    .section-title i {
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.4rem;
+    }
+    
+    .content-text {
+        color: #475569;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        margin-bottom: 0;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 4px solid var(--primary);
+        box-shadow: var(--card-shadow);
+    }
+    
+    /* Action Buttons */
+    .action-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        animation: fadeInUp 0.6s ease-out 0.5s both;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 0.85rem 2rem;
+        font-weight: 600;
+        border-radius: 12px;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+    
+    .btn-apply {
+        background: var(--gradient-success);
+        color: white;
+        box-shadow: 0 6px 20px rgba(76, 201, 240, 0.3);
+    }
+    
+    .btn-apply:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(76, 201, 240, 0.4);
+        color: white;
+    }
+    
+    .btn-edit {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 2px solid rgba(245, 158, 11, 0.2);
+    }
+    
+    .btn-edit:hover {
+        background: rgba(245, 158, 11, 0.2);
+        color: #b45309;
+        transform: translateY(-2px);
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+    
+    .btn-applicants {
+        background: rgba(67, 97, 238, 0.1);
+        color: var(--primary);
+        border: 2px solid rgba(67, 97, 238, 0.2);
+    }
+    
+    .btn-applicants:hover {
+        background: rgba(67, 97, 238, 0.2);
+        color: var(--primary-dark);
+        transform: translateY(-2px);
+        border-color: rgba(67, 97, 238, 0.3);
+    }
+    
+    .btn-danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 2px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .btn-danger:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: #b91c1c;
+        transform: translateY(-2px);
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    .btn-login {
+        background: var(--gradient);
+        color: white;
+        box-shadow: 0 6px 20px rgba(67, 97, 238, 0.3);
+    }
+    
+    .btn-login:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(67, 97, 238, 0.4);
+        color: white;
+    }
+    
+    .btn-disabled {
+        background: rgba(100, 116, 139, 0.1);
+        color: #64748b;
+        border: 2px solid rgba(100, 116, 139, 0.2);
+        cursor: not-allowed;
+    }
+    
+    .btn-disabled:hover {
+        transform: none;
+        background: rgba(100, 116, 139, 0.1);
+        color: #64748b;
+    }
+    
+    /* Applicant Count Badge */
+    .applicant-count {
+        background: var(--gradient-accent);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        box-shadow: 0 4px 12px rgba(247, 37, 133, 0.3);
+    }
+    
+    /* Quick Stats */
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        transition: var(--transition);
+    }
+    
+    .stat-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 800;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .job-detail-container {
+            padding: 1rem 0;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .job-title {
+            font-size: 2rem;
+        }
+        
+        .company-info {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+        
+        .job-meta-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .quick-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .job-title {
+            font-size: 1.6rem;
+        }
+        
+        .company-name {
+            font-size: 1.2rem;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+        }
+        
+        .quick-stats {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="job-detail-container">
+    <div class="container">
+        <div class="job-header-card">
+            <div class="card-body">
+                <!-- Job Title Section -->
+                <div class="job-title-section">
+                    <h1 class="job-title">{{ job.title }}</h1>
+                    
+                    <div class="company-info">
+                        <div class="company-logo">
+                            {% if job.employer.employer_profile.company_name %}
+                                {{ job.employer.employer_profile.company_name|slice:":1"|upper }}
+                            {% else %}
+                                {{ job.employer.username|slice:":1"|upper }}
+                            {% endif %}
+                        </div>
+                        <div class="company-details">
+                            <div class="company-name">
+                                <i class="fas fa-building"></i>
+                                {% if job.employer.employer_profile.company_name %}
+                                    {{ job.employer.employer_profile.company_name }}
+                                {% else %}
+                                    {{ job.employer.get_full_name|default:job.employer.username }}
+                                {% endif %}
+                            </div>
+                            <p class="company-tagline">
+                                <i class="fas fa-globe me-1 text-primary"></i>
+                                {% if job.employer.employer_profile.website %}
+                                    {{ job.employer.employer_profile.website }}
+                                {% else %}
+                                    Leading Employer
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="quick-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">{{ job.applications_count }}</div>
+                            <div class="stat-label">Applications</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ job.get_job_type_display }}</div>
+                            <div class="stat-label">Job Type</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ job.get_experience_level_display }}</div>
+                            <div class="stat-label">Experience</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ job.posted_date|timesince }}</div>
+                            <div class="stat-label">Posted</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Job Meta Information -->
+                    <div class="job-meta-grid">
+                        <div class="meta-item">
+                            <div class="meta-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="meta-content">
+                                <div class="meta-label">Location</div>
+                                <div class="meta-value">{{ job.location }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <div class="meta-icon">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div class="meta-content">
+                                <div class="meta-label">Job Type</div>
+                                <div class="meta-value">{{ job.get_job_type_display }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <div class="meta-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="meta-content">
+                                <div class="meta-label">Experience Level</div>
+                                <div class="meta-value">{{ job.get_experience_level_display }}</div>
+                            </div>
+                        </div>
+                        
+                        {% if job.salary_min and job.salary_max %}
+                        <div class="meta-item">
+                            <div class="meta-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="meta-content">
+                                <div class="meta-label">Salary Range</div>
+                                <div class="meta-value">${{ job.salary_min }} - ${{ job.salary_max }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Job Description -->
+                <div class="content-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-file-alt"></i>Job Description
+                    </h3>
+                    <div class="content-text">
+                        {{ job.description|linebreaks }}
+                    </div>
+                </div>
+                
+                <!-- Requirements -->
+                <div class="content-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-tasks"></i>Requirements
+                    </h3>
+                    <div class="content-text">
+                        {{ job.requirements|linebreaks }}
+                    </div>
+                </div>
+                
+                <!-- Responsibilities -->
+                {% if job.responsibilities %}
+                <div class="content-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-list-check"></i>Responsibilities
+                    </h3>
+                    <div class="content-text">
+                        {{ job.responsibilities|linebreaks }}
+                    </div>
+                </div>
                 {% endif %}
-            {% elif user == job.employer %}
-                <a href="{% url 'jobs:edit_job' job.id %}" class="btn btn-warning">Edit Job</a>
-                <a href="{% url 'jobs:view_applicants' job.id %}" class="btn btn-info">View Applicants ({{ job.applications_count }})</a>
-            {% endif %}
-        {% else %}
-            <a href="{% url 'accounts:login' %}" class="btn btn-primary">Login to Apply</a>
-        {% endif %}
+                
+                <!-- Action Buttons -->
+                <div class="action-section">
+                    {% if user.is_authenticated %}
+                        {% if user.profile.role == 'seeker' %}
+                            {% if has_applied %}
+                                <div class="action-buttons">
+                                    <button class="btn btn-disabled">
+                                        <i class="fas fa-check-circle"></i>Already Applied
+                                    </button>
+                                </div>
+                            {% else %}
+                                <div class="action-buttons">
+                                    <a href="{% url 'jobs:apply_job' job.id %}" class="btn btn-apply">
+                                        <i class="fas fa-paper-plane"></i>Apply Now
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% elif user == job.employer %}
+                            <div class="action-buttons">
+                                <a href="{% url 'jobs:edit_job' job.id %}" class="btn btn-edit">
+                                    <i class="fas fa-edit"></i>Edit Job
+                                </a>
+                                <a href="{% url 'jobs:view_applicants' job.id %}" class="btn btn-applicants">
+                                    <i class="fas fa-users"></i>View Applicants
+                                    <span class="applicant-count">{{ job.applications_count }}</span>
+                                </a>
+                                <a href="{% url 'jobs:delete_job' job.id %}" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i>Delete Job
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="action-buttons">
+                            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-login">
+                                <i class="fas fa-sign-in-alt"></i>Login to Apply
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add animation to meta items
+        const metaItems = document.querySelectorAll('.meta-item');
+        metaItems.forEach((item, index) => {
+            item.style.animationDelay = `${index * 0.1}s`;
+        });
+        
+        // Add hover effects to action buttons
+        const buttons = document.querySelectorAll('.btn:not(.btn-disabled)');
+        buttons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Add click animation to apply button
+        const applyButton = document.querySelector('.btn-apply');
+        if (applyButton) {
+            applyButton.addEventListener('click', function(e) {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        }
+        
+        // Add parallax effect to header card on scroll
+        window.addEventListener('scroll', function() {
+            const scrolled = window.pageYOffset;
+            const headerCard = document.querySelector('.job-header-card');
+            if (headerCard) {
+                headerCard.style.transform = `translateY(${scrolled * 0.05}px)`;
+            }
+        });
+    });
+</script>
+
 {% endblock %}

@@ -1,36 +1,604 @@
-{% extends 'base.html' %}
-{% block title %}Applicants for {{ job.title }} - Job Portal{% endblock %}
-{% block content %}
-<h2>Applicants for {{ job.title }}</h2>
-<p>Total Applications: {{ applications.count }}</p>
-<div class="table-responsive">
-    <table class="table">
-        <thead><tr><th>Applicant</th><th>Email</th><th>Applied Date</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>
-            {% for app in applications %}
-            <tr>
-                <td>{{ app.applicant.first_name }} {{ app.applicant.last_name }}</td>
-                <td>{{ app.applicant.email }}</td>
-                <td>{{ app.applied_date|date:"M d, Y" }}</td>
-                <td><span class="badge bg-info">{{ app.get_status_display }}</span></td>
-                <td>
-                    <form method="post" action="{% url 'jobs:update_application_status' app.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <select name="status" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
-                            <option value="pending" {% if app.status == 'pending' %}selected{% endif %}>Pending</option>
-                            <option value="reviewing" {% if app.status == 'reviewing' %}selected{% endif %}>Reviewing</option>
-                            <option value="shortlisted" {% if app.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
-                            <option value="accepted" {% if app.status == 'accepted' %}selected{% endif %}>Accepted</option>
-                            <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>Rejected</option>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Applicants Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4361ee;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .controls-section {
+            padding: 30px 40px;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .controls-header h2 {
+            font-size: 18px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(67, 97, 238, 0.4);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 10px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #4361ee;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 40px 40px 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        th {
+            padding: 16px 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+            color: #333;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .name-cell {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .phone-cell {
+            font-family: 'Courier New', monospace;
+            color: #4361ee;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-reviewing {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .status-shortlisted {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-accepted {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-view {
+            background: #e7f1ff;
+            color: #0066cc;
+        }
+
+        .btn-view:hover {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #ffe7e7;
+            color: #cc0000;
+        }
+
+        .btn-delete:hover {
+            background: #cc0000;
+            color: white;
+        }
+
+        .btn-update {
+            background: #e7f1ff;
+            color: #0066cc;
+        }
+
+        .btn-update:hover {
+            background: #0066cc;
+            color: white;
+        }
+
+        .status-select {
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+            font-size: 12px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .status-select:focus {
+            outline: none;
+            border-color: #4361ee;
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        .filter-reset {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-reset:hover {
+            background: #5a6268;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .controls-section,
+            .table-wrapper {
+                padding: 20px;
+            }
+
+            .stats-container {
+                padding: 20px;
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .controls-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            th, td {
+                padding: 12px 8px;
+                font-size: 12px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Include the navbar -->
+    {% include 'navbar.html' %}
+    
+    <div class="container">
+        <div class="header">
+            <h1>📋 Job Applicants Management</h1>
+            <p>Track and manage all job applications efficiently</p>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCount">{{ applications.count }}</div>
+                <div class="stat-label">Total Applications</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingCount">{{ pending_count }}</div>
+                <div class="stat-label">Pending Review</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="reviewingCount">{{ shortlisted_count }}</div>
+                <div class="stat-label">Shortlisted</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="acceptedCount">{{ accepted_count }}</div>
+                <div class="stat-label">Accepted</div>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="controls-header">
+                <h2>Filters & Export</h2>
+                <button class="download-btn" onclick="downloadFilteredData()">
+                    ⬇️ Download as CSV
+                </button>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="statusFilter">Status</label>
+                    <select id="statusFilter" onchange="applyFilters()">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="shortlisted">Shortlisted</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="searchFilter">Search by Name or Email</label>
+                    <input type="text" id="searchFilter" placeholder="Enter name or email..." onchange="applyFilters()" oninput="applyFilters()">
+                </div>
+
+                <div class="filter-group">
+                    <label for="dateFilter">Applied After</label>
+                    <input type="date" id="dateFilter" onchange="applyFilters()">
+                </div>
+
+                <div class="filter-group" style="align-self: flex-end;">
+                    <button class="filter-reset" onclick="resetFilters()">Reset Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                        <th>Position</th>
+                        <th>Applied Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="applicantsTable">
+                    <!-- Table rows will be populated by JavaScript -->
+                </tbody>
+            </table>
+            <div id="noResults" class="no-results" style="display: none;">
+                No applications found matching your filters.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pass Django data to JavaScript as JSON
+        const applicants = JSON.parse('{{ applications_json|safe }}');
+        let filteredApplicants = [...applicants];
+
+        function renderTable() {
+            const tbody = document.getElementById('applicantsTable');
+            const noResults = document.getElementById('noResults');
+
+            if (filteredApplicants.length === 0) {
+                tbody.innerHTML = '';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            noResults.style.display = 'none';
+            tbody.innerHTML = filteredApplicants.map(app => `
+                <tr>
+                    <td class="name-cell">${app.name}</td>
+                    <td>${app.email}</td>
+                    <td class="phone-cell">${app.phone}</td>
+                    <td>${app.position}</td>
+                    <td>${new Date(app.date).toLocaleDateString()}</td>
+                    <td>
+                        <select class="status-select" onchange="updateStatus(${app.id}, this.value)" 
+                                data-current-status="${app.status}">
+                            <option value="pending" ${app.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="reviewing" ${app.status === 'reviewing' ? 'selected' : ''}>Under Review</option>
+                            <option value="shortlisted" ${app.status === 'shortlisted' ? 'selected' : ''}>Shortlisted</option>
+                            <option value="accepted" ${app.status === 'accepted' ? 'selected' : ''}>Accepted</option>
+                            <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>Rejected</option>
                         </select>
-                    </form>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="5" class="text-center">No applications yet</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-<a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
-{% endblock %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-small btn-view" onclick="viewApplicant(${app.id})">View</button>
+                            <a href="/jobs/application/${app.id}/delete/" class="btn-small btn-delete">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            updateStats();
+        }
+
+        function updateStatus(applicationId, newStatus) {
+            // In a real implementation, this would make an AJAX call to update the status
+            // For now, we'll just update the local data and UI
+            const applicant = applicants.find(a => a.id === applicationId);
+            if (applicant) {
+                applicant.status = newStatus;
+                // Update the filtered list as well
+                const filteredApplicant = filteredApplicants.find(a => a.id === applicationId);
+                if (filteredApplicant) {
+                    filteredApplicant.status = newStatus;
+                }
+                // Update stats
+                updateStats();
+            }
+        }
+
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            filteredApplicants = applicants.filter(app => {
+                const matchStatus = !statusFilter || app.status === statusFilter;
+                const matchSearch = !searchFilter || 
+                    app.name.toLowerCase().includes(searchFilter) || 
+                    app.email.toLowerCase().includes(searchFilter);
+                const matchDate = !dateFilter || new Date(app.date) >= new Date(dateFilter);
+
+                return matchStatus && matchSearch && matchDate;
+            });
+
+            renderTable();
+        }
+
+        function resetFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            filteredApplicants = [...applicants];
+            renderTable();
+        }
+
+        function updateStats() {
+            document.getElementById('totalCount').textContent = applicants.length;
+            document.getElementById('pendingCount').textContent = applicants.filter(a => a.status === 'pending').length;
+            document.getElementById('reviewingCount').textContent = applicants.filter(a => a.status === 'shortlisted').length;
+            document.getElementById('acceptedCount').textContent = applicants.filter(a => a.status === 'accepted').length;
+        }
+
+        function downloadFilteredData() {
+            if (filteredApplicants.length === 0) {
+                alert('No data to download. Please adjust your filters.');
+                return;
+            }
+
+            const headers = ['Name', 'Email', 'Phone Number', 'Position', 'Applied Date', 'Status'];
+            const rows = filteredApplicants.map(app => [
+                app.name,
+                app.email,
+                app.phone,
+                app.position,
+                new Date(app.date).toLocaleDateString(),
+                app.status.charAt(0).toUpperCase() + app.status.slice(1)
+            ]);
+
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `applicants_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        function viewApplicant(id) {
+            const app = applicants.find(a => a.id === id);
+            // In a real implementation, this would redirect to a detail page
+            alert(`Viewing: ${app.name}\nEmail: ${app.email}\nPhone: ${app.phone}\nPosition: ${app.position}`);
+        }
+
+        // Initial render
+        document.addEventListener('DOMContentLoaded', function() {
+            renderTable();
+        });
+    </script>
+</body>
+</html>

@@ -1,27 +1,866 @@
 {% extends 'base.html' %}
 {% block title %}Edit Job - Job Portal{% endblock %}
 {% block content %}
-<h2>Edit Job</h2>
-<div class="card">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3"><label>Job Title</label><input type="text" name="title" class="form-control" value="{{ job.title }}" required></div>
-            <div class="mb-3"><label>Description</label><textarea name="description" class="form-control" rows="4" required>{{ job.description }}</textarea></div>
-            <div class="mb-3"><label>Requirements</label><textarea name="requirements" class="form-control" rows="3" required>{{ job.requirements }}</textarea></div>
-            <div class="mb-3"><label>Responsibilities</label><textarea name="responsibilities" class="form-control" rows="3">{{ job.responsibilities }}</textarea></div>
-            <div class="row">
-                <div class="col-md-6 mb-3"><label>Job Type</label><select name="job_type" class="form-control" required><option value="full-time" {% if job.job_type == 'full-time' %}selected{% endif %}>Full Time</option><option value="part-time" {% if job.job_type == 'part-time' %}selected{% endif %}>Part Time</option><option value="contract" {% if job.job_type == 'contract' %}selected{% endif %}>Contract</option><option value="internship" {% if job.job_type == 'internship' %}selected{% endif %}>Internship</option><option value="remote" {% if job.job_type == 'remote' %}selected{% endif %}>Remote</option></select></div>
-                <div class="col-md-6 mb-3"><label>Experience Level</label><select name="experience_level" class="form-control" required><option value="entry" {% if job.experience_level == 'entry' %}selected{% endif %}>Entry Level</option><option value="mid" {% if job.experience_level == 'mid' %}selected{% endif %}>Mid Level</option><option value="senior" {% if job.experience_level == 'senior' %}selected{% endif %}>Senior Level</option><option value="executive" {% if job.experience_level == 'executive' %}selected{% endif %}>Executive</option></select></div>
+
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #4895ef;
+        --primary-dark: #3a0ca3;
+        --secondary: #7209b7;
+        --accent: #f72585;
+        --success: #4cc9f0;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        --gradient-secondary: linear-gradient(135deg, #7209b7 0%, #b5179e 100%);
+        --gradient-accent: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+        --gradient-success: linear-gradient(135deg, #4cc9f0 0%, #3a86ff 100%);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        --border-radius: 20px;
+    }
+    
+    .edit-job-container {
+        background: linear-gradient(135deg, #f5f7ff 0%, #f0f4ff 50%, #e6f0ff 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .page-header {
+        margin-bottom: 2rem;
+        position: relative;
+        background: white;
+        padding: 2.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        margin-top: 1rem;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--gradient);
+    }
+    
+    .page-header::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200px;
+        height: 200px;
+        background: var(--gradient);
+        opacity: 0.03;
+        border-radius: 50%;
+        animation: float 8s ease-in-out infinite;
+    }
+    
+    .page-header h2 {
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin-bottom: 0.5rem;
+        font-size: 2.5rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .page-header .subtitle {
+        font-size: 1.1rem;
+        color: #64748b;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .job-info-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(67, 97, 238, 0.1);
+        color: var(--primary);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 0.5rem 0.5rem 0 0;
+        border: 1px solid rgba(67, 97, 238, 0.2);
+    }
+    
+    .job-info-badge i {
+        margin-right: 0.5rem;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+    }
+    
+    .edit-form-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        border: none;
+        overflow: hidden;
+        transition: var(--transition);
+        animation: slideInUp 0.6s ease-out;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        position: relative;
+    }
+    
+    .edit-form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--gradient);
+    }
+    
+    @keyframes slideInUp {
+        from { opacity: 0; transform: translateY(30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    .edit-form-card:hover {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        transform: translateY(-5px);
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        padding: 2rem 2.5rem 1.5rem;
+    }
+    
+    .card-header h3 {
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .card-header h3 i {
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-right: 0.75rem;
+        font-size: 1.75rem;
+    }
+    
+    .card-header p {
+        color: #64748b;
+        margin-bottom: 0;
+        font-size: 1rem;
+    }
+    
+    .card-body {
+        padding: 2rem 2.5rem 2.5rem;
+    }
+    
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 1.75rem;
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+    
+    .form-group:nth-child(1) { animation-delay: 0.1s; }
+    .form-group:nth-child(2) { animation-delay: 0.2s; }
+    .form-group:nth-child(3) { animation-delay: 0.3s; }
+    .form-group:nth-child(4) { animation-delay: 0.4s; }
+    .form-group:nth-child(5) { animation-delay: 0.5s; }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    label {
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 0.75rem;
+        display: block;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        position: relative;
+        padding-left: 0.5rem;
+    }
+    
+    label::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 16px;
+        background: var(--gradient);
+        border-radius: 2px;
+        opacity: 0;
+        transition: var(--transition);
+    }
+    
+    .form-group:focus-within label::before {
+        opacity: 1;
+    }
+    
+    .form-control {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.85rem 1.2rem;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: #f8fafc;
+        font-weight: 500;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15), 
+                    inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        transform: translateY(-2px);
+    }
+    
+    .form-control:hover {
+        border-color: #cbd5e1;
+        background: white;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+    
+    textarea.form-control:focus {
+        min-height: 140px;
+    }
+    
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 16px;
+        padding-right: 2.5rem;
+    }
+    
+    /* Form Sections */
+    .form-section {
+        margin-bottom: 2.5rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        animation: fadeIn 0.8s ease-out;
+    }
+    
+    .form-section:last-of-type {
+        border-bottom: none;
+        margin-bottom: 1rem;
+    }
+    
+    .section-title {
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(67, 97, 238, 0.1);
+    }
+    
+    .section-title i {
+        margin-right: 0.75rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.4rem;
+    }
+    
+    /* Checkbox Styles */
+    .form-check {
+        margin-bottom: 1.5rem;
+        padding-left: 2.5rem;
+    }
+    
+    .form-check-input {
+        width: 1.2em;
+        height: 1.2em;
+        margin-left: -2.5rem;
+        margin-top: 0.25em;
+        border: 2px solid #cbd5e1;
+        border-radius: 6px;
+        transition: var(--transition);
+        position: relative;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
+    }
+    
+    .form-check-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
+    }
+    
+    .form-check-label {
+        font-weight: 600;
+        color: var(--dark);
+        cursor: pointer;
+        padding-left: 0.5rem;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-left: 1rem;
+    }
+    
+    .status-active {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+    
+    .status-inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    /* Button Styles */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        animation: fadeInUp 0.6s ease-out 0.8s both;
+    }
+    
+    .btn-primary {
+        background: var(--gradient);
+        border: none;
+        color: white;
+        box-shadow: 0 6px 20px rgba(67, 97, 238, 0.3);
+        padding: 0.85rem 2.5rem;
+        font-weight: 600;
+        border-radius: 14px;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+        font-size: 1rem;
+        flex: 1;
+    }
+    
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: 0.5s;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(67, 97, 238, 0.4);
+        background-size: 150% 150%;
+    }
+    
+    .btn-primary:hover::before {
+        left: 100%;
+    }
+    
+    .btn-secondary {
+        background: rgba(100, 116, 139, 0.1);
+        border: 2px solid rgba(100, 116, 139, 0.2);
+        color: #64748b;
+        padding: 0.85rem 2rem;
+        font-weight: 600;
+        border-radius: 14px;
+        transition: var(--transition);
+        flex: 1;
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(100, 116, 139, 0.2);
+        color: #475569;
+        transform: translateY(-2px);
+        border-color: rgba(100, 116, 139, 0.3);
+    }
+    
+    .btn-danger {
+        background: rgba(239, 68, 68, 0.1);
+        border: 2px solid rgba(239, 68, 68, 0.2);
+        color: #dc2626;
+        padding: 0.85rem 2rem;
+        font-weight: 600;
+        border-radius: 14px;
+        transition: var(--transition);
+    }
+    
+    .btn-danger:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: #b91c1c;
+        transform: translateY(-2px);
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    /* Character Count */
+    .char-count {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        text-align: right;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .char-count.warning {
+        color: #f59e0b;
+    }
+    
+    .char-count.danger {
+        color: #ef4444;
+    }
+    
+    /* Required Field Indicator */
+    .required::after {
+        content: ' *';
+        color: var(--accent);
+    }
+    
+    /* Form Validation */
+    .is-invalid {
+        border-color: var(--accent) !important;
+        background: rgba(247, 37, 133, 0.05) !important;
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    .invalid-feedback {
+        color: var(--accent);
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        display: block;
+        animation: fadeIn 0.3s ease-out;
+        font-weight: 500;
+    }
+    
+    /* Success Message */
+    .alert-success {
+        background: rgba(76, 201, 240, 0.1);
+        color: #0e7490;
+        border: 1px solid rgba(76, 201, 240, 0.3);
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        animation: slideInDown 0.5s ease-out;
+        border-left: 4px solid var(--success);
+    }
+    
+    /* Loading State */
+    .btn-loading {
+        position: relative;
+        color: transparent !important;
+    }
+    
+    .btn-loading::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        margin-left: -10px;
+        margin-top: -10px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-right-color: transparent;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Job Preview */
+    .job-preview {
+        background: rgba(67, 97, 238, 0.03);
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .preview-title {
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .preview-title i {
+        margin-right: 0.5rem;
+        color: var(--primary);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .edit-job-container {
+            padding: 1rem 0;
+        }
+        
+        .page-header {
+            padding: 2rem 1.5rem;
+        }
+        
+        .page-header h2 {
+            font-size: 2rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem 1.5rem 2rem;
+        }
+        
+        .card-header {
+            padding: 1.5rem 1.5rem 1rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .job-info-badges {
+            text-align: center;
+        }
+    }
+</style>
+
+<div class="edit-job-container">
+    <div class="container">
+        <div class="page-header">
+            <h2>Edit Job Posting</h2>
+            <p class="subtitle">Update your job details to attract the best candidates</p>
+            <div class="job-info-badges mt-3">
+                <span class="job-info-badge">
+                    <i class="fas fa-briefcase"></i>{{ job.get_job_type_display }}
+                </span>
+                <span class="job-info-badge">
+                    <i class="fas fa-map-marker-alt"></i>{{ job.location }}
+                </span>
+                <span class="job-info-badge">
+                    <i class="fas fa-layer-group"></i>{{ job.get_experience_level_display }}
+                </span>
+                <span class="job-info-badge status-{% if job.is_active %}active{% else %}inactive{% endif %}">
+                    <i class="fas fa-circle"></i>{% if job.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3"><label>Category</label><input type="text" name="category" class="form-control" value="{{ job.category }}" required></div>
-                <div class="col-md-6 mb-3"><label>Location</label><input type="text" name="location" class="form-control" value="{{ job.location }}" required></div>
+        </div>
+
+        {% if messages %}
+        <div class="alert-success">
+            {% for message in messages %}
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle me-3" style="font-size: 1.5rem;"></i>
+                <div>
+                    <strong>Success!</strong> {{ message }}
+                </div>
             </div>
-            <div class="mb-3 form-check"><input type="checkbox" name="is_active" class="form-check-input" id="is_active" {% if job.is_active %}checked{% endif %}><label class="form-check-label" for="is_active">Active</label></div>
-            <button type="submit" class="btn btn-primary">Update Job</button>
-            <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
-        </form>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="edit-form-card">
+            <div class="card-header">
+                <h3><i class="fas fa-edit"></i> Update Job Details</h3>
+                <p>Make changes to your job posting below. All fields marked with * are required.</p>
+            </div>
+            
+            <div class="card-body">
+                <form method="post" id="editJobForm">
+                    {% csrf_token %}
+                    
+                    <!-- Job Preview -->
+                    <div class="job-preview">
+                        <h4 class="preview-title">
+                            <i class="fas fa-eye"></i>Current Job Preview
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Title:</strong> {{ job.title }}<br>
+                                <strong>Type:</strong> {{ job.get_job_type_display }}<br>
+                                <strong>Category:</strong> {{ job.category }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Location:</strong> {{ job.location }}<br>
+                                <strong>Experience:</strong> {{ job.get_experience_level_display }}<br>
+                                <strong>Status:</strong> 
+                                <span class="status-badge status-{% if job.is_active %}active{% else %}inactive{% endif %}">
+                                    {% if job.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-info-circle"></i> Basic Information</h4>
+                        
+                        <div class="form-group">
+                            <label for="title" class="required">Job Title</label>
+                            <input type="text" name="title" id="title" class="form-control" 
+                                   value="{{ job.title }}" required
+                                   placeholder="e.g. Senior Software Engineer"
+                                   oninput="updateCharCount('title', 100)">
+                            <div class="char-count" id="title-count">{{ job.title|length }}/100</div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="job_type" class="required">Job Type</label>
+                                    <select name="job_type" id="job_type" class="form-control" required>
+                                        <option value="">Select Job Type</option>
+                                        <option value="full-time" {% if job.job_type == 'full-time' %}selected{% endif %}>Full Time</option>
+                                        <option value="part-time" {% if job.job_type == 'part-time' %}selected{% endif %}>Part Time</option>
+                                        <option value="contract" {% if job.job_type == 'contract' %}selected{% endif %}>Contract</option>
+                                        <option value="internship" {% if job.job_type == 'internship' %}selected{% endif %}>Internship</option>
+                                        <option value="remote" {% if job.job_type == 'remote' %}selected{% endif %}>Remote</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="experience_level" class="required">Experience Level</label>
+                                    <select name="experience_level" id="experience_level" class="form-control" required>
+                                        <option value="">Select Experience Level</option>
+                                        <option value="entry" {% if job.experience_level == 'entry' %}selected{% endif %}>Entry Level (0-2 years)</option>
+                                        <option value="mid" {% if job.experience_level == 'mid' %}selected{% endif %}>Mid Level (2-5 years)</option>
+                                        <option value="senior" {% if job.experience_level == 'senior' %}selected{% endif %}>Senior Level (5+ years)</option>
+                                        <option value="executive" {% if job.experience_level == 'executive' %}selected{% endif %}>Executive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="category" class="required">Category</label>
+                                    <input type="text" name="category" id="category" class="form-control" 
+                                           value="{{ job.category }}" required
+                                           placeholder="e.g. Technology, Marketing, Sales">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="location" class="required">Location</label>
+                                    <input type="text" name="location" id="location" class="form-control" 
+                                           value="{{ job.location }}" required
+                                           placeholder="e.g. New York, NY or Remote">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Job Details Section -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-file-alt"></i> Job Details</h4>
+                        
+                        <div class="form-group">
+                            <label for="description" class="required">Job Description</label>
+                            <textarea name="description" id="description" class="form-control" rows="5" 
+                                      required placeholder="Describe the role, team, and company culture..."
+                                      oninput="updateCharCount('description', 2000)">{{ job.description }}</textarea>
+                            <div class="char-count" id="description-count">{{ job.description|length }}/2000</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="requirements" class="required">Requirements</label>
+                            <textarea name="requirements" id="requirements" class="form-control" rows="4" 
+                                      required placeholder="List the required skills, qualifications, and experience..."
+                                      oninput="updateCharCount('requirements', 1000)">{{ job.requirements }}</textarea>
+                            <div class="char-count" id="requirements-count">{{ job.requirements|length }}/1000</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="responsibilities">Responsibilities</label>
+                            <textarea name="responsibilities" id="responsibilities" class="form-control" rows="4" 
+                                      placeholder="Describe the day-to-day responsibilities and tasks..."
+                                      oninput="updateCharCount('responsibilities', 1000)">{% if job.responsibilities %}{{ job.responsibilities }}{% endif %}</textarea>
+                            <div class="char-count" id="responsibilities-count">{% if job.responsibilities %}{{ job.responsibilities|length }}{% else %}0{% endif %}/1000</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Job Status Section -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-toggle-on"></i> Job Status</h4>
+                        
+                        <div class="form-check">
+                            <input type="checkbox" name="is_active" class="form-check-input" id="is_active" 
+                                   {% if job.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">
+                                Activate this job posting
+                                <span class="status-badge status-{% if job.is_active %}active{% else %}inactive{% endif %}">
+                                    <i class="fas fa-circle"></i>
+                                    {% if job.is_active %}Currently Active{% else %}Currently Inactive{% endif %}
+                                </span>
+                            </label>
+                            <small class="text-muted d-block mt-1">
+                                When active, this job will be visible to candidates and accept applications.
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-save me-2"></i>Update Job
+                        </button>
+                        <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <a href="#" class="btn btn-danger" id="deleteBtn">
+                            <i class="fas fa-trash me-2"></i>Delete Job
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editForm = document.getElementById('editJobForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        
+        // Form submission handling
+        editForm.addEventListener('submit', function(e) {
+            let isValid = true;
+            const requiredFields = editForm.querySelectorAll('[required]');
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                    
+                    setTimeout(() => {
+                        field.classList.remove('is-invalid');
+                    }, 2000);
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                editForm.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    editForm.style.animation = '';
+                }, 500);
+            } else {
+                submitBtn.classList.add('btn-loading');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+            }
+        });
+        
+        // Delete button confirmation
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+                    // You can implement delete functionality here
+                    // For example: window.location.href = "{% url 'jobs:delete_job' job.id %}";
+                    alert('Delete functionality would be implemented here');
+                }
+            });
+        }
+        
+        // Add focus animations
+        const formInputs = editForm.querySelectorAll('.form-control');
+        formInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Auto-remove invalid class when user starts typing
+        formInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid')) {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+        
+        // Update status badge when checkbox changes
+        const statusCheckbox = document.getElementById('is_active');
+        const statusBadge = document.querySelector('.form-check-label .status-badge');
+        
+        if (statusCheckbox && statusBadge) {
+            statusCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    statusBadge.className = 'status-badge status-active';
+                    statusBadge.innerHTML = '<i class="fas fa-circle"></i>Will be Active';
+                } else {
+                    statusBadge.className = 'status-badge status-inactive';
+                    statusBadge.innerHTML = '<i class="fas fa-circle"></i>Will be Inactive';
+                }
+            });
+        }
+    });
+    
+    function updateCharCount(fieldId, maxLength) {
+        const field = document.getElementById(fieldId);
+        const countElement = document.getElementById(fieldId + '-count');
+        const currentLength = field.value.length;
+        
+        countElement.textContent = `${currentLength}/${maxLength}`;
+        
+        const percentage = (currentLength / maxLength) * 100;
+        countElement.classList.remove('warning', 'danger');
+        
+        if (percentage > 80 && percentage <= 95) {
+            countElement.classList.add('warning');
+        } else if (percentage > 95) {
+            countElement.classList.add('danger');
+        }
+    }
+</script>
+
 {% endblock %}

@@ -1,31 +1,1004 @@
 {% extends 'base.html' %}
 {% block title %}Post Job - Job Portal{% endblock %}
 {% block content %}
-<h2>Post a New Job</h2>
-<div class="card">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3"><label>Job Title</label><input type="text" name="title" class="form-control" required></div>
-            <div class="mb-3"><label>Description</label><textarea name="description" class="form-control" rows="4" required></textarea></div>
-            <div class="mb-3"><label>Requirements</label><textarea name="requirements" class="form-control" rows="3" required></textarea></div>
-            <div class="mb-3"><label>Responsibilities</label><textarea name="responsibilities" class="form-control" rows="3"></textarea></div>
-            <div class="row">
-                <div class="col-md-6 mb-3"><label>Job Type</label><select name="job_type" class="form-control" required><option value="">Select Type</option><option value="full-time">Full Time</option><option value="part-time">Part Time</option><option value="contract">Contract</option><option value="internship">Internship</option><option value="remote">Remote</option></select></div>
-                <div class="col-md-6 mb-3"><label>Experience Level</label><select name="experience_level" class="form-control" required><option value="">Select Level</option><option value="entry">Entry Level</option><option value="mid">Mid Level</option><option value="senior">Senior Level</option><option value="executive">Executive</option></select></div>
+
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #4895ef;
+        --primary-dark: #3a0ca3;
+        --secondary: #7209b7;
+        --accent: #f72585;
+        --success: #4cc9f0;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        --gradient-secondary: linear-gradient(135deg, #7209b7 0%, #b5179e 100%);
+        --gradient-accent: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+        --gradient-success: linear-gradient(135deg, #4cc9f0 0%, #3a86ff 100%);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        --border-radius: 20px;
+    }
+    
+    .post-job-container {
+        background: linear-gradient(135deg, #f5f7ff 0%, #f0f4ff 50%, #e6f0ff 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .page-header {
+        margin-bottom: 2rem;
+        position: relative;
+        background: white;
+        padding: 2.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        margin-top: 1rem;
+        text-align: center;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--gradient);
+    }
+    
+    .page-header::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200px;
+        height: 200px;
+        background: var(--gradient);
+        opacity: 0.03;
+        border-radius: 50%;
+        animation: float 8s ease-in-out infinite;
+    }
+    
+    .page-header h2 {
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin-bottom: 0.5rem;
+        font-size: 2.5rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .page-header .subtitle {
+        font-size: 1.1rem;
+        color: #64748b;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 2;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+    }
+    
+    .job-form-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        border: none;
+        overflow: hidden;
+        transition: var(--transition);
+        animation: slideInUp 0.6s ease-out;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        position: relative;
+    }
+    
+    .job-form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--gradient);
+    }
+    
+    @keyframes slideInUp {
+        from { opacity: 0; transform: translateY(30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    .job-form-card:hover {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        transform: translateY(-5px);
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        padding: 2rem 2.5rem 1rem;
+    }
+    
+    .card-header h3 {
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .card-header h3 i {
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-right: 0.75rem;
+        font-size: 1.75rem;
+    }
+    
+    .card-header p {
+        color: #64748b;
+        margin-bottom: 0;
+        font-size: 1rem;
+    }
+    
+    .card-body {
+        padding: 2rem 2.5rem 2.5rem;
+    }
+    
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 1.75rem;
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+    
+    .form-group:nth-child(1) { animation-delay: 0.1s; }
+    .form-group:nth-child(2) { animation-delay: 0.2s; }
+    .form-group:nth-child(3) { animation-delay: 0.3s; }
+    .form-group:nth-child(4) { animation-delay: 0.4s; }
+    .form-group:nth-child(5) { animation-delay: 0.5s; }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    label {
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 0.75rem;
+        display: block;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        position: relative;
+        padding-left: 0.5rem;
+    }
+    
+    label::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 16px;
+        background: var(--gradient);
+        border-radius: 2px;
+        opacity: 0;
+        transition: var(--transition);
+    }
+    
+    .form-group:focus-within label::before {
+        opacity: 1;
+    }
+    
+    .form-control {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.85rem 1.2rem;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: #f8fafc;
+        font-weight: 500;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15), 
+                    inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        transform: translateY(-2px);
+    }
+    
+    .form-control:hover {
+        border-color: #cbd5e1;
+        background: white;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+    
+    textarea.form-control:focus {
+        min-height: 140px;
+    }
+    
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 16px;
+        padding-right: 2.5rem;
+    }
+    
+    /* Form Sections */
+    .form-section {
+        margin-bottom: 2.5rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        animation: fadeIn 0.8s ease-out;
+    }
+    
+    .form-section:last-of-type {
+        border-bottom: none;
+        margin-bottom: 1rem;
+    }
+    
+    .section-title {
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(67, 97, 238, 0.1);
+    }
+    
+    .section-title i {
+        margin-right: 0.75rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.4rem;
+    }
+    
+    /* Button Styles */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        animation: fadeInUp 0.6s ease-out 0.8s both;
+    }
+    
+    .btn-primary {
+        background: var(--gradient);
+        border: none;
+        color: white;
+        box-shadow: 0 6px 20px rgba(67, 97, 238, 0.3);
+        padding: 0.85rem 2.5rem;
+        font-weight: 600;
+        border-radius: 14px;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+        font-size: 1rem;
+        flex: 1;
+    }
+    
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: 0.5s;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(67, 97, 238, 0.4);
+        background-size: 150% 150%;
+    }
+    
+    .btn-primary:hover::before {
+        left: 100%;
+    }
+    
+    .btn-secondary {
+        background: rgba(100, 116, 139, 0.1);
+        border: 2px solid rgba(100, 116, 139, 0.2);
+        color: #64748b;
+        padding: 0.85rem 2rem;
+        font-weight: 600;
+        border-radius: 14px;
+        transition: var(--transition);
+        flex: 1;
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(100, 116, 139, 0.2);
+        color: #475569;
+        transform: translateY(-2px);
+        border-color: rgba(100, 116, 139, 0.3);
+    }
+    
+    /* Character Count */
+    .char-count {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        text-align: right;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .char-count.warning {
+        color: #f59e0b;
+    }
+    
+    .char-count.danger {
+        color: #ef4444;
+    }
+    
+    /* Required Field Indicator */
+    .required::after {
+        content: ' *';
+        color: var(--accent);
+    }
+    
+    /* Salary Range Styles */
+    .salary-range-container {
+        background: rgba(67, 97, 238, 0.03);
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .salary-display {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary);
+        text-align: center;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: white;
+        border-radius: 10px;
+        border: 2px dashed rgba(67, 97, 238, 0.2);
+    }
+    
+    .salary-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .salary-note {
+        font-size: 0.85rem;
+        color: #64748b;
+        text-align: center;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
+    
+    /* Working Hours Styles */
+    .working-hours-container {
+        background: rgba(76, 201, 240, 0.03);
+        border: 1px solid rgba(76, 201, 240, 0.1);
+        border-radius: 14px;
+        padding: 1.5rem;
+    }
+    
+    .hours-display {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #0ea5e9;
+        text-align: center;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: white;
+        border-radius: 10px;
+        border: 2px dashed rgba(76, 201, 240, 0.2);
+    }
+    
+    /* Mode Selection */
+    .mode-selection {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .mode-option {
+        position: relative;
+    }
+    
+    .mode-option input {
+        position: absolute;
+        opacity: 0;
+    }
+    
+    .mode-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: var(--transition);
+        background: white;
+        text-align: center;
+    }
+    
+    .mode-label i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: #64748b;
+        transition: var(--transition);
+    }
+    
+    .mode-label span {
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.9rem;
+    }
+    
+    .mode-option input:checked + .mode-label {
+        border-color: var(--primary);
+        background: rgba(67, 97, 238, 0.05);
+        transform: translateY(-2px);
+    }
+    
+    .mode-option input:checked + .mode-label i {
+        color: var(--primary);
+    }
+    
+    .mode-option:hover .mode-label {
+        border-color: var(--primary-light);
+        transform: translateY(-2px);
+    }
+    
+    /* Form Validation */
+    .is-invalid {
+        border-color: var(--accent) !important;
+        background: rgba(247, 37, 133, 0.05) !important;
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    .invalid-feedback {
+        color: var(--accent);
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        display: block;
+        animation: fadeIn 0.3s ease-out;
+        font-weight: 500;
+    }
+    
+    /* Success Message */
+    .alert-success {
+        background: rgba(76, 201, 240, 0.1);
+        color: #0e7490;
+        border: 1px solid rgba(76, 201, 240, 0.3);
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        animation: slideInDown 0.5s ease-out;
+        border-left: 4px solid var(--success);
+    }
+    
+    /* Loading State */
+    .btn-loading {
+        position: relative;
+        color: transparent !important;
+    }
+    
+    .btn-loading::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        margin-left: -10px;
+        margin-top: -10px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-right-color: transparent;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .post-job-container {
+            padding: 1rem 0;
+        }
+        
+        .page-header {
+            padding: 2rem 1.5rem;
+        }
+        
+        .page-header h2 {
+            font-size: 2rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem 1.5rem 2rem;
+        }
+        
+        .card-header {
+            padding: 1.5rem 1.5rem 1rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .salary-inputs {
+            grid-template-columns: 1fr;
+        }
+        
+        .mode-selection {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Feature Highlights */
+    .feature-highlights {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .feature-item {
+        background: rgba(67, 97, 238, 0.05);
+        padding: 1rem;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        transition: var(--transition);
+    }
+    
+    .feature-item:hover {
+        transform: translateY(-3px);
+        background: rgba(67, 97, 238, 0.08);
+    }
+    
+    .feature-item i {
+        font-size: 1.5rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .feature-item span {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+</style>
+
+<div class="post-job-container">
+    <div class="container">
+        <div class="page-header">
+            <h2>Post a New Job Opportunity</h2>
+            <p class="subtitle">Reach thousands of qualified candidates and find the perfect fit for your team</p>
+        </div>
+
+        {% if messages %}
+        <div class="alert-success">
+            {% for message in messages %}
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle me-3" style="font-size: 1.5rem;"></i>
+                <div>
+                    <strong>Success!</strong> {{ message }}
+                </div>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3"><label>Category</label><input type="text" name="category" class="form-control" required></div>
-                <div class="col-md-6 mb-3"><label>Location</label><input type="text" name="location" class="form-control" required></div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="job-form-card">
+            <div class="card-header">
+                <h3><i class="fas fa-briefcase"></i> Job Information</h3>
+                <p>Fill in the details about your job opening to attract the right candidates</p>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3"><label>Min Salary</label><input type="number" name="salary_min" class="form-control"></div>
-                <div class="col-md-6 mb-3"><label>Max Salary</label><input type="number" name="salary_max" class="form-control"></div>
+            
+            <div class="card-body">
+                <form method="post" id="jobForm">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-info-circle"></i> Basic Information</h4>
+                        
+                        <div class="form-group">
+                            <label for="title" class="required">Job Title</label>
+                            <input type="text" name="title" id="title" class="form-control" 
+                                   placeholder="e.g. Senior Software Engineer" required
+                                   oninput="updateCharCount('title', 100)">
+                            <div class="char-count" id="title-count">0/100</div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="job_type" class="required">Job Type</label>
+                                    <select name="job_type" id="job_type" class="form-control" required>
+                                        <option value="">Select Job Type</option>
+                                        <option value="full-time">Full Time</option>
+                                        <option value="part-time">Part Time</option>
+                                        <option value="contract">Contract</option>
+                                        <option value="internship">Internship</option>
+                                        <option value="remote">Remote</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="experience_level" class="required">Experience Level</label>
+                                    <select name="experience_level" id="experience_level" class="form-control" required>
+                                        <option value="">Select Experience Level</option>
+                                        <option value="entry">Entry Level (0-2 years)</option>
+                                        <option value="mid">Mid Level (2-5 years)</option>
+                                        <option value="senior">Senior Level (5+ years)</option>
+                                        <option value="executive">Executive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="category" class="required">Category</label>
+                                    <input type="text" name="category" id="category" class="form-control" 
+                                           placeholder="e.g. Technology, Marketing, Sales" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="location" class="required">Location</label>
+                                    <input type="text" name="location" id="location" class="form-control" 
+                                           placeholder="e.g. New York, NY or Remote" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Compensation & Work Details Section -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-dollar-sign"></i> Compensation & Work Details</h4>
+                        
+                        <!-- Salary Range -->
+                        <div class="form-group">
+                            <label class="required">Salary Range</label>
+                            <div class="salary-range-container">
+                                <div class="salary-display" id="salaryDisplay">
+                                    ₹10,000 – ₹20,000 per month
+                                </div>
+                                <div class="salary-inputs">
+                                    <div>
+                                        <label for="salary_min">Minimum Salary (₹)</label>
+                                        <input type="number" name="salary_min" id="salary_min" class="form-control" 
+                                               placeholder="10000" value="10000" min="0" required
+                                               oninput="updateSalaryDisplay()">
+                                    </div>
+                                    <div>
+                                        <label for="salary_max">Maximum Salary (₹)</label>
+                                        <input type="number" name="salary_max" id="salary_max" class="form-control" 
+                                               placeholder="20000" value="20000" min="0" required
+                                               oninput="updateSalaryDisplay()">
+                                    </div>
+                                </div>
+                                <div class="salary-note">
+                                    * Based on skills and performance
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Working Hours -->
+                        <div class="form-group">
+                            <label class="required">Working Hours</label>
+                            <div class="working-hours-container">
+                                <div class="hours-display" id="hoursDisplay">
+                                    15-20 hours per week
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="hours_min">Minimum Hours/Week</label>
+                                        <input type="number" name="hours_min" id="hours_min" class="form-control" 
+                                               placeholder="15" value="15" min="1" max="168" required
+                                               oninput="updateHoursDisplay()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="hours_max">Maximum Hours/Week</label>
+                                        <input type="number" name="hours_max" id="hours_max" class="form-control" 
+                                               placeholder="20" value="20" min="1" max="168" required
+                                               oninput="updateHoursDisplay()">
+                                    </div>
+                                </div>
+                                <div class="salary-note">
+                                    * Flexible working hours
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Work Mode -->
+                        <div class="form-group">
+                            <label class="required">Work Mode</label>
+                            <div class="mode-selection">
+                                <div class="mode-option">
+                                    <input type="checkbox" name="work_mode" value="remote" id="remote" checked>
+                                    <label for="remote" class="mode-label">
+                                        <i class="fas fa-home"></i>
+                                        <span>Remote</span>
+                                    </label>
+                                </div>
+                                <div class="mode-option">
+                                    <input type="checkbox" name="work_mode" value="hybrid" id="hybrid" checked>
+                                    <label for="hybrid" class="mode-label">
+                                        <i class="fas fa-building"></i>
+                                        <span>Hybrid</span>
+                                    </label>
+                                </div>
+                                <div class="mode-option">
+                                    <input type="checkbox" name="work_mode" value="onsite" id="onsite">
+                                    <label for="onsite" class="mode-label">
+                                        <i class="fas fa-office-building"></i>
+                                        <span>On-site</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <small class="text-muted">Select all that apply</small>
+                        </div>
+                        
+                        <!-- Application Deadline -->
+                        <div class="form-group">
+                            <label for="deadline" class="required">Application Deadline</label>
+                            <input type="date" name="deadline" id="deadline" class="form-control"
+                                   value="2025-11-30" required>
+                            <small class="text-muted">Applications will be accepted until this date</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Job Details Section -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-file-alt"></i> Job Details</h4>
+                        
+                        <div class="form-group">
+                            <label for="description" class="required">Job Description</label>
+                            <textarea name="description" id="description" class="form-control" rows="5" 
+                                      placeholder="Describe the role, team, and company culture..." required
+                                      oninput="updateCharCount('description', 2000)"></textarea>
+                            <div class="char-count" id="description-count">0/2000</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="requirements" class="required">Requirements</label>
+                            <textarea name="requirements" id="requirements" class="form-control" rows="4" 
+                                      placeholder="List the required skills, qualifications, and experience..." required
+                                      oninput="updateCharCount('requirements', 1000)"></textarea>
+                            <div class="char-count" id="requirements-count">0/1000</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="responsibilities">Responsibilities</label>
+                            <textarea name="responsibilities" id="responsibilities" class="form-control" rows="4" 
+                                      placeholder="Describe the day-to-day responsibilities and tasks..."
+                                      oninput="updateCharCount('responsibilities', 1000)"></textarea>
+                            <div class="char-count" id="responsibilities-count">0/1000</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Feature Highlights -->
+                    <div class="feature-highlights">
+                        <div class="feature-item">
+                            <i class="fas fa-eye"></i>
+                            <span>Visible to thousands of job seekers</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-bolt"></i>
+                            <span>Quick application process</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-users"></i>
+                            <span>Access to qualified candidates</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Track applications in real-time</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-paper-plane me-2"></i>Post Job Now
+                        </button>
+                        <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
             </div>
-            <div class="mb-3"><label>Application Deadline</label><input type="date" name="deadline" class="form-control"></div>
-            <button type="submit" class="btn btn-primary">Post Job</button>
-            <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
-        </form>
+        </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set minimum date for deadline to today
+        const today = new Date().toISOString().split('T')[0];
+        const deadlineInput = document.getElementById('deadline');
+        if (deadlineInput) {
+            deadlineInput.min = today;
+        }
+        
+        // Initialize displays
+        updateSalaryDisplay();
+        updateHoursDisplay();
+        
+        // Form submission handling
+        const jobForm = document.getElementById('jobForm');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        jobForm.addEventListener('submit', function(e) {
+            let isValid = true;
+            const requiredFields = jobForm.querySelectorAll('[required]');
+            
+            // Validate salary range
+            const salaryMin = parseInt(document.getElementById('salary_min').value);
+            const salaryMax = parseInt(document.getElementById('salary_max').value);
+            if (salaryMin > salaryMax) {
+                document.getElementById('salary_max').classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            // Validate hours range
+            const hoursMin = parseInt(document.getElementById('hours_min').value);
+            const hoursMax = parseInt(document.getElementById('hours_max').value);
+            if (hoursMin > hoursMax) {
+                document.getElementById('hours_max').classList.add('is-invalid');
+                isValid = false;
+            }
+            
+            // Validate work mode selection
+            const workModes = jobForm.querySelectorAll('input[name="work_mode"]:checked');
+            if (workModes.length === 0) {
+                isValid = false;
+                // You can add visual feedback for work mode here
+            }
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                    
+                    setTimeout(() => {
+                        field.classList.remove('is-invalid');
+                    }, 2000);
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                jobForm.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    jobForm.style.animation = '';
+                }, 500);
+            } else {
+                submitBtn.classList.add('btn-loading');
+                submitBtn.disabled = true;
+            }
+        });
+        
+        // Add focus animations
+        const formInputs = jobForm.querySelectorAll('.form-control');
+        formInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Auto-remove invalid class when user starts typing
+        formInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid')) {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+        
+        // Initialize character counts
+        initializeCharCounts();
+    });
+    
+    function updateSalaryDisplay() {
+        const min = document.getElementById('salary_min').value || '10,000';
+        const max = document.getElementById('salary_max').value || '20,000';
+        const display = document.getElementById('salaryDisplay');
+        
+        // Format numbers with Indian rupee symbol and commas
+        const formatNumber = (num) => {
+            return '₹' + parseInt(num).toLocaleString('en-IN');
+        };
+        
+        display.textContent = `${formatNumber(min)} – ${formatNumber(max)} per month`;
+    }
+    
+    function updateHoursDisplay() {
+        const min = document.getElementById('hours_min').value || '15';
+        const max = document.getElementById('hours_max').value || '20';
+        const display = document.getElementById('hoursDisplay');
+        
+        display.textContent = `${min}-${max} hours per week`;
+    }
+    
+    function updateCharCount(fieldId, maxLength) {
+        const field = document.getElementById(fieldId);
+        const countElement = document.getElementById(fieldId + '-count');
+        const currentLength = field.value.length;
+        
+        countElement.textContent = `${currentLength}/${maxLength}`;
+        
+        const percentage = (currentLength / maxLength) * 100;
+        countElement.classList.remove('warning', 'danger');
+        
+        if (percentage > 80 && percentage <= 95) {
+            countElement.classList.add('warning');
+        } else if (percentage > 95) {
+            countElement.classList.add('danger');
+        }
+    }
+    
+    function initializeCharCounts() {
+        const fields = [
+            { id: 'title', max: 100 },
+            { id: 'description', max: 2000 },
+            { id: 'requirements', max: 1000 },
+            { id: 'responsibilities', max: 1000 }
+        ];
+        
+        fields.forEach(field => {
+            updateCharCount(field.id, field.max);
+        });
+    }
+</script>
+
 {% endblock %}

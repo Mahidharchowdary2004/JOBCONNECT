@@ -1,18 +1,786 @@
 {% extends 'base.html' %}
 {% block title %}Apply for {{ job.title }} - Job Portal{% endblock %}
 {% block content %}
-<h2>Apply for {{ job.title }}</h2>
-<div class="card">
-    <div class="card-body">
-        <h5>{{ job.employer.employer_profile.company_name|default:"Company" }}</h5>
-        <p>{{ job.location }} | {{ job.get_job_type_display }}</p>
-        <hr>
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3"><label>Cover Letter</label><textarea name="cover_letter" class="form-control" rows="6" placeholder="Explain why you're a good fit for this position..."></textarea></div>
-            <button type="submit" class="btn btn-success">Submit Application</button>
-            <a href="{% url 'jobs:job_detail' job.id %}" class="btn btn-secondary">Cancel</a>
-        </form>
+
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #4895ef;
+        --primary-dark: #3a0ca3;
+        --secondary: #7209b7;
+        --accent: #f72585;
+        --success: #4cc9f0;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        --gradient-secondary: linear-gradient(135deg, #7209b7 0%, #b5179e 100%);
+        --gradient-accent: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+        --gradient-success: linear-gradient(135deg, #4cc9f0 0%, #3a86ff 100%);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        --border-radius: 20px;
+    }
+    
+    .apply-container {
+        background: linear-gradient(135deg, #f5f7ff 0%, #f0f4ff 50%, #e6f0ff 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .page-header {
+        margin-bottom: 2rem;
+        position: relative;
+        background: white;
+        padding: 2.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        margin-top: 1rem;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--gradient);
+    }
+    
+    .page-header::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200px;
+        height: 200px;
+        background: var(--gradient);
+        opacity: 0.03;
+        border-radius: 50%;
+        animation: float 8s ease-in-out infinite;
+    }
+    
+    .page-header h2 {
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin-bottom: 0.5rem;
+        font-size: 2.2rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .page-header .subtitle {
+        font-size: 1.1rem;
+        color: #64748b;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 2;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+    }
+    
+    .apply-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        border: none;
+        overflow: hidden;
+        transition: var(--transition);
+        animation: slideInUp 0.6s ease-out;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+        position: relative;
+    }
+    
+    .apply-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--gradient-success);
+    }
+    
+    @keyframes slideInUp {
+        from { opacity: 0; transform: translateY(30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    .apply-card:hover {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        transform: translateY(-5px);
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        padding: 2rem 2.5rem 1.5rem;
+    }
+    
+    .card-header h3 {
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .card-header h3 i {
+        background: var(--gradient-success);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-right: 0.75rem;
+        font-size: 1.75rem;
+    }
+    
+    .card-body {
+        padding: 2rem 2.5rem 2.5rem;
+    }
+    
+    /* Job Preview */
+    .job-preview {
+        background: rgba(76, 201, 240, 0.05);
+        border: 1px solid rgba(76, 201, 240, 0.1);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2.5rem;
+        animation: fadeInUp 0.6s ease-out 0.2s both;
+    }
+    
+    .job-preview-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .company-logo {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
+        background: var(--gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.5rem;
+        box-shadow: 0 6px 20px rgba(67, 97, 238, 0.2);
+        transition: var(--transition);
+    }
+    
+    .job-preview:hover .company-logo {
+        transform: scale(1.05) rotate(5deg);
+    }
+    
+    .job-details {
+        flex: 1;
+    }
+    
+    .job-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+    }
+    
+    .company-name {
+        font-size: 1.1rem;
+        color: var(--primary);
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .job-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .meta-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(67, 97, 238, 0.1);
+        color: var(--primary);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid rgba(67, 97, 238, 0.2);
+        gap: 0.5rem;
+    }
+    
+    /* Form Styles */
+    .application-form {
+        animation: fadeInUp 0.6s ease-out 0.4s both;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(67, 97, 238, 0.1);
+    }
+    
+    .section-title i {
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.4rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.75rem;
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+    
+    .form-group:nth-child(1) { animation-delay: 0.5s; }
+    .form-group:nth-child(2) { animation-delay: 0.6s; }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    label {
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 0.75rem;
+        display: block;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        position: relative;
+        padding-left: 0.5rem;
+    }
+    
+    label::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 16px;
+        background: var(--gradient);
+        border-radius: 2px;
+        opacity: 0;
+        transition: var(--transition);
+    }
+    
+    .form-group:focus-within label::before {
+        opacity: 1;
+    }
+    
+    .form-control {
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1rem 1.2rem;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: #f8fafc;
+        font-weight: 500;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        resize: vertical;
+        min-height: 150px;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15), 
+                    inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        transform: translateY(-2px);
+        min-height: 180px;
+    }
+    
+    .form-control:hover {
+        border-color: #cbd5e1;
+        background: white;
+    }
+    
+    /* Character Count */
+    .char-count {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        text-align: right;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .char-count.warning {
+        color: #f59e0b;
+    }
+    
+    .char-count.danger {
+        color: #ef4444;
+    }
+    
+    /* Tips Section */
+    .tips-section {
+        background: rgba(245, 158, 11, 0.05);
+        border: 1px solid rgba(245, 158, 11, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        animation: fadeInUp 0.6s ease-out 0.3s both;
+    }
+    
+    .tips-title {
+        font-weight: 700;
+        color: #d97706;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .tips-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .tips-list li {
+        padding: 0.5rem 0;
+        color: #92400e;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .tips-list li i {
+        color: #d97706;
+        margin-top: 0.25rem;
+        flex-shrink: 0;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        animation: fadeInUp 0.6s ease-out 0.7s both;
+    }
+    
+    .btn {
+        padding: 0.85rem 2.5rem;
+        font-weight: 600;
+        border-radius: 14px;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        flex: 1;
+    }
+    
+    .btn-submit {
+        background: var(--gradient-success);
+        color: white;
+        box-shadow: 0 6px 20px rgba(76, 201, 240, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: 0.5s;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(76, 201, 240, 0.4);
+        background-size: 150% 150%;
+    }
+    
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+    
+    .btn-cancel {
+        background: rgba(100, 116, 139, 0.1);
+        border: 2px solid rgba(100, 116, 139, 0.2);
+        color: #64748b;
+    }
+    
+    .btn-cancel:hover {
+        background: rgba(100, 116, 139, 0.2);
+        color: #475569;
+        transform: translateY(-2px);
+        border-color: rgba(100, 116, 139, 0.3);
+    }
+    
+    /* Resume Upload */
+    .resume-upload {
+        background: rgba(16, 185, 129, 0.05);
+        border: 2px dashed rgba(16, 185, 129, 0.2);
+        border-radius: 14px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        transition: var(--transition);
+        cursor: pointer;
+    }
+    
+    .resume-upload:hover {
+        background: rgba(16, 185, 129, 0.08);
+        border-color: rgba(16, 185, 129, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .resume-upload i {
+        font-size: 2.5rem;
+        color: #10b981;
+        margin-bottom: 1rem;
+    }
+    
+    .resume-text {
+        font-weight: 600;
+        color: #047857;
+        margin-bottom: 0.5rem;
+    }
+    
+    .resume-subtext {
+        font-size: 0.85rem;
+        color: #059669;
+    }
+    
+    /* Loading State */
+    .btn-loading {
+        position: relative;
+        color: transparent !important;
+    }
+    
+    .btn-loading::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        margin-left: -10px;
+        margin-top: -10px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-right-color: transparent;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .apply-container {
+            padding: 1rem 0;
+        }
+        
+        .page-header {
+            padding: 2rem 1.5rem;
+        }
+        
+        .page-header h2 {
+            font-size: 1.8rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem 1.5rem 2rem;
+        }
+        
+        .card-header {
+            padding: 1.5rem 1.5rem 1rem;
+        }
+        
+        .job-preview-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+        
+        .job-meta {
+            justify-content: center;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="apply-container">
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-paper-plane me-2"></i>Apply for Position</h2>
+            <p class="subtitle">Submit your application for this exciting opportunity</p>
+        </div>
+
+        <div class="apply-card">
+            <div class="card-header">
+                <h3><i class="fas fa-file-contract"></i>Application Form</h3>
+            </div>
+            
+            <div class="card-body">
+                <!-- Job Preview -->
+                <div class="job-preview">
+                    <div class="job-preview-header">
+                        <div class="company-logo">
+                            {% if job.employer.employer_profile.company_name %}
+                                {{ job.employer.employer_profile.company_name|slice:":1"|upper }}
+                            {% else %}
+                                {{ job.employer.username|slice:":1"|upper }}
+                            {% endif %}
+                        </div>
+                        <div class="job-details">
+                            <div class="job-title">{{ job.title }}</div>
+                            <div class="company-name">
+                                <i class="fas fa-building"></i>
+                                {{ job.employer.employer_profile.company_name|default:"Company" }}
+                            </div>
+                            <div class="job-meta">
+                                <span class="meta-badge">
+                                    <i class="fas fa-map-marker-alt"></i>{{ job.location }}
+                                </span>
+                                <span class="meta-badge">
+                                    <i class="fas fa-briefcase"></i>{{ job.get_job_type_display }}
+                                </span>
+                                {% if job.salary_min and job.salary_max %}
+                                <span class="meta-badge">
+                                    <i class="fas fa-money-bill-wave"></i>${{ job.salary_min }} - ${{ job.salary_max }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Application Tips -->
+                <div class="tips-section">
+                    <h4 class="tips-title">
+                        <i class="fas fa-lightbulb"></i>Application Tips
+                    </h4>
+                    <ul class="tips-list">
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Customize your cover letter for this specific role</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Highlight relevant experience and skills</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Explain why you're interested in this company</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Keep it professional and concise</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <form method="post" class="application-form" id="applicationForm">
+                    {% csrf_token %}
+                    
+                    <!-- Resume Upload (Optional) -->
+                    <div class="resume-upload" onclick="document.getElementById('resume').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <div class="resume-text">Upload Updated Resume (Optional)</div>
+                        <div class="resume-subtext">Click to upload or drag and drop</div>
+                        <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" style="display: none;">
+                    </div>
+
+                    <!-- Cover Letter Section -->
+                    <div class="form-section">
+                        <h4 class="section-title">
+                            <i class="fas fa-edit"></i>Cover Letter
+                        </h4>
+                        
+                        <div class="form-group">
+                            <label for="cover_letter">Tell us why you're the perfect candidate</label>
+                            <textarea name="cover_letter" id="cover_letter" class="form-control" rows="8" 
+                                      placeholder="Explain why you're a good fit for this position, highlight your relevant experience, and share what excites you about this opportunity..."
+                                      oninput="updateCharCount('cover_letter', 2000)"></textarea>
+                            <div class="char-count" id="cover_letter-count">0/2000</div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-submit" id="submitBtn">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Application
+                        </button>
+                        <a href="{% url 'jobs:job_detail' job.id %}" class="btn btn-cancel">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const applicationForm = document.getElementById('applicationForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const coverLetterInput = document.getElementById('cover_letter');
+        
+        // Form submission handling
+        applicationForm.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Validate cover letter
+            if (!coverLetterInput.value.trim()) {
+                coverLetterInput.classList.add('is-invalid');
+                isValid = false;
+                
+                setTimeout(() => {
+                    coverLetterInput.classList.remove('is-invalid');
+                }, 2000);
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                applicationForm.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    applicationForm.style.animation = '';
+                }, 500);
+            } else {
+                submitBtn.classList.add('btn-loading');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+            }
+        });
+        
+        // Add focus animations
+        const formInputs = applicationForm.querySelectorAll('.form-control');
+        formInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Auto-remove invalid class when user starts typing
+        formInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid')) {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+        
+        // File upload handling
+        const resumeUpload = document.querySelector('.resume-upload');
+        const resumeInput = document.getElementById('resume');
+        
+        resumeInput.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                const fileSize = (file.size / 1024 / 1024).toFixed(2); // MB
+                
+                if (fileSize > 5) {
+                    alert('File size must be less than 5MB');
+                    this.value = '';
+                    return;
+                }
+                
+                resumeUpload.innerHTML = `
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                    <div class="resume-text">${file.name}</div>
+                    <div class="resume-subtext">${fileSize} MB - Ready to upload</div>
+                    <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" style="display: none;">
+                `;
+                
+                // Re-attach click event
+                resumeUpload.addEventListener('click', function() {
+                    document.getElementById('resume').click();
+                });
+            }
+        });
+        
+        // Initialize character count
+        updateCharCount('cover_letter', 2000);
+    });
+    
+    function updateCharCount(fieldId, maxLength) {
+        const field = document.getElementById(fieldId);
+        const countElement = document.getElementById(fieldId + '-count');
+        const currentLength = field.value.length;
+        
+        countElement.textContent = `${currentLength}/${maxLength}`;
+        
+        const percentage = (currentLength / maxLength) * 100;
+        countElement.classList.remove('warning', 'danger');
+        
+        if (percentage > 80 && percentage <= 95) {
+            countElement.classList.add('warning');
+        } else if (percentage > 95) {
+            countElement.classList.add('danger');
+        }
+    }
+    
+    // Add shake animation for validation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .is-invalid {
+            border-color: var(--accent) !important;
+            background: rgba(247, 37, 133, 0.05) !important;
+            animation: shake 0.5s ease-in-out;
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+
 {% endblock %}
