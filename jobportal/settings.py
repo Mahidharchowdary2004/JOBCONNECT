@@ -31,26 +31,38 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-blod9#t$+q5q#c58l1kh_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Also add the Render domain to allowed hosts
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Session timeout settings for both job seekers and employers
 # Sessions will expire after 30 minutes of inactivity
-SESSION_COOKIE_AGE = 180  # 30 minutes in seconds
+SESSION_COOKIE_AGE = int(os.environ.get('SESSION_COOKIE_AGE', 1800))  # 30 minutes in seconds
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_SAVE_EVERY_REQUEST = True
 
-# CSRF trusted origins for Replit
+# CSRF trusted origins for Replit and Render
 CSRF_TRUSTED_ORIGINS = [
     'https://*.replit.dev',
     'https://*.repl.co',
+    'https://*.onrender.com',
 ]
 
-# CSRF and Session settings for Replit environment
-CSRF_COOKIE_SECURE = False
-CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = False
-SESSION_COOKIE_SAMESITE = 'Lax'
+# CSRF and Session settings for production environment
+if not DEBUG:
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+else:
+    CSRF_COOKIE_SECURE = False
+    CSRF_COOKIE_HTTPONLY = False
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Allow iframe embedding for Replit webview
 X_FRAME_OPTIONS = 'ALLOWALL'
@@ -109,9 +121,23 @@ WSGI_APPLICATION = 'jobportal.wsgi.application'
 try:
     import dj_database_url
     if 'DATABASE_URL' in os.environ:
-        DATABASES = {
-            'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
-        }
+        database_url = os.environ.get('DATABASE_URL')
+        if database_url:  # Check that database_url is not None
+            DATABASES = {
+                'default': dj_database_url.parse(database_url)
+            }
+        else:
+            # Fallback if DATABASE_URL is None or empty
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.postgresql',
+                    'NAME': os.environ.get('DB_NAME', 'Mahi'),
+                    'USER': os.environ.get('DB_USER', 'postgres'),
+                    'PASSWORD': os.environ.get('DB_PASSWORD', 'Mahi@123'),
+                    'HOST': os.environ.get('DB_HOST', 'localhost'),
+                    'PORT': os.environ.get('DB_PORT', '5432'),
+                }
+            }
     else:
         DATABASES = {
             'default': {
